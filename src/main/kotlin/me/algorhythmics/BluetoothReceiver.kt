@@ -13,11 +13,17 @@ class BluetoothReceiver : BroadcastReceiver() {
         val device = intent.bluetoothDevice()
 
         when (intent.action) {
-            BluetoothDevice.ACTION_ACL_CONNECTED ->
-                Log.i(TAG, "connected: ${device.describe()}")
+            BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                val name = device.describe()
 
-            BluetoothDevice.ACTION_ACL_DISCONNECTED ->
+                Log.i(TAG, "connected: $name")
+                DiracService.publish(IDiracService.DEVICE_BLUETOOTH, name)
+            }
+
+            BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                 Log.i(TAG, "disconnected: ${device.describe()}")
+                DiracService.publish(IDiracService.DEVICE_NONE, null)
+            }
         }
     }
 

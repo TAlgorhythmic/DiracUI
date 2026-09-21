@@ -11,10 +11,8 @@ import android.util.Log
  * API 24+.
  */
 class BootReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
-
         // Roughly 10 seconds of runway here before the receiver is torn down.
         // Anything longer belongs in goAsync() or a JobScheduler job.
         Log.i(TAG, "boot completed")

@@ -15,9 +15,20 @@ android {
         versionName '1.0'
     }
 
+    buildFeatures {
+        aidl true
+    }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 }
 
+// Compiles with JDK 21 whatever JDK runs Gradle - the system default here is 17,
+// which cannot compile source 21. Gradle picks it up from the installed JVMs.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
