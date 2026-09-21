@@ -1,2 +1,2 @@
-# Dirac Power Sound modern port
+# DiracAudioControlService modern client implementation
 Still in development
