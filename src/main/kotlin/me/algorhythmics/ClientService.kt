@@ -6,7 +6,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import se.dirac.acs.api.Device
+import se.dirac.acs.api.Filter
 import se.dirac.acs.api.IAudioControlService
+import se.dirac.acs.api.IAudioControlServiceCallback
+import se.dirac.acs.api.Output
+import se.dirac.acs.api.OutputSettings
 
 private const val TAG: String = "Client"
 private val INTENT: Intent = Intent().setClassName("se.dirac.acs", "se.dirac.acs.AudioControlService")
@@ -15,6 +20,12 @@ private val INTENT: Intent = Intent().setClassName("se.dirac.acs", "se.dirac.acs
 var STARTED: Boolean = false
 @Volatile
 var BOUND: IAudioControlService? = null
+
+// Config state
+@Volatile
+var currentSettings: OutputSettings = OutputSettings(Device.NOTHING_DEVICE, Filter.NOTHING_FILTER)
+@Volatile
+var currentOutput: Output = Output.INTERNAL
 
 private val CONNECTION = object: ServiceConnection {
     override fun onServiceConnected(p0: ComponentName, binder: IBinder) {
@@ -37,6 +48,22 @@ private val CONNECTION = object: ServiceConnection {
 		Log.w(TAG, "Bound service died for some reason?")
 		BOUND = null
     }
+}
+
+private val serviceCallback = object: IAudioControlServiceCallback.Stub() {
+	override fun onFilterAdd(j: Long, iArr: IntArray?) {/* Unused */}
+	override fun onRoutingChanged(i: Int) {/* Unused */}
+	override fun onSetUser(str: String?) {/* Unused */}
+	override fun onSyncDone() {/* Unused */}
+
+	override fun onSettingsChanged(output: Output, outputSettings: OutputSettings) {
+		currentOutput = output
+		currentSettings = outputSettings
+
+		// Update UI if active
+		val ui = MainActivity.getActiveUi()
+		ui?.runOnUiThread { ui.updateUi(currentSettings, currentOutput) }
+	}
 }
 
 fun startService(ctx: Context): Boolean {

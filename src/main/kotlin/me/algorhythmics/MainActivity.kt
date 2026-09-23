@@ -70,40 +70,25 @@ class MainActivity : Activity() {
 		}
 	}
 
-	private companion object {
+	fun updateUi(settings: OutputSettings, output: Output) {
+		diracEnabled.isChecked = settings.enabled
+		diracEnabled.isEnabled = true
+		filterEnabled.isChecked = settings.filterEnabled
+		filterEnabled.isEnabled = true
+		sfxEnabled.isChecked = settings.sfxEnabled
+		sfxEnabled.isEnabled = true
+		eqEnabled.isChecked = settings.eqEnabled
+		eqEnabled.isEnabled = true
+	}
+
+	companion object {
 		const val REQUEST_BLUETOOTH = 1
 
-		// Config state
 		@Volatile
-		var currentSettings: OutputSettings = OutputSettings(Device.NOTHING_DEVICE, Filter.NOTHING_FILTER)
-		@Volatile
-		var currentOutput: Output = Output.INTERNAL
-		@Volatile
-		var activeUi: MainActivity? = null
+		private var activeUi: MainActivity? = null
 
-		private val serviceCallback = object: IAudioControlServiceCallback.Stub() {
-			override fun onFilterAdd(j: Long, iArr: IntArray?) {/* Unused */}
-			override fun onRoutingChanged(i: Int) {/* Unused */}
-			override fun onSetUser(str: String?) {/* Unused */}
-			override fun onSyncDone() {/* Unused */}
-
-			override fun onSettingsChanged(output: Output, outputSettings: OutputSettings) {
-				currentOutput = output
-				currentSettings = outputSettings
-
-				// Update UI if active
-				val ui = activeUi
-                ui?.runOnUiThread {
-                    ui.diracEnabled.isChecked = currentSettings.enabled
-                    ui.diracEnabled.isEnabled = true
-                    ui.filterEnabled.isChecked = currentSettings.filterEnabled
-                    ui.filterEnabled.isEnabled = true
-                    ui.sfxEnabled.isChecked = currentSettings.sfxEnabled
-                    ui.sfxEnabled.isEnabled = true
-                    ui.eqEnabled.isChecked = currentSettings.eqEnabled
-                    ui.eqEnabled.isEnabled = true
-                }
-			}
+		fun getActiveUi(): MainActivity? {
+			return activeUi
 		}
 	}
 }
