@@ -8,10 +8,10 @@ class Device : Parcelable {
 	companion object {
 		val CREATOR: Parcelable.Creator<Device> = DeviceCreator()
 		val NOTHING_DEVICE: Device = Device(
-			100, // Arbitrary id that doesnt conflict with anything else (probably)
-			"Nothing", // Name
+		id = 100, // Arbitrary id
+			name = "Nothing",
 			System.currentTimeMillis(),
-			List(1) {Filter.NOTHING_FILTER}
+			filters = List(1) {Filter.NOTHING_FILTER}
 		)
 
 		fun deviceFromParcel(parcel: Parcel): Device {

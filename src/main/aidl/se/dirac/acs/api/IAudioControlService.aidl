@@ -23,7 +23,7 @@ interface IAudioControlService {
 	/**
 	* @param locale just pass "en"
 	*/
-	Device getDeviceByProductId(String productId, String locale)
+	Device getDeviceByProductId(String productId, String locale);
 
 	/**
 	* Lists all devices from a specific output
@@ -31,7 +31,7 @@ interface IAudioControlService {
 	* @param locale just pass "en".
 	* @param output either INTERNAL or EXTERNAL. INTERNAL will likely return a singleton with the speaker, EXTERNAL will actually fetch the list of devices in the database
 	*/
-	List<Device> listDevices(String locale, Output output);
+	List<Device> listDevices(String locale, in Output output);
 
 	/**
 	* Returns additional arbitrary data vendors likely put relevant data for them?
@@ -45,12 +45,12 @@ interface IAudioControlService {
 	*
 	* @return whether it was applied or not
 	*/
-	boolean setOutput(OutputSettings output);
+	boolean setOutput(in OutputSettings output);
 
 	/**
 	* Disable output type sort of? Easier to just use setOutput for everything.
 	*/
-	void setDisabled(Output output);
+	void setDisabled(in Output output);
 
 	/**
 	* Delete a device.
@@ -58,7 +58,7 @@ interface IAudioControlService {
 	*/
 	boolean deleteDevice(long id);
 
-	OutputSettings getCurrentOutputSettings(Output output);
+	OutputSettings getCurrentOutputSettings(in Output output);
 
 	/**
 	* Check whether a user has a licence, even though there is no user system in this app
@@ -71,6 +71,8 @@ interface IAudioControlService {
 	int requestSync();
 
 	String getUser();
+
+	boolean setUser(String str, String str1);
 
 	/**
 	* WARNING! Never call this, it's unimplemented in the service.

@@ -22,11 +22,7 @@ class HeadsetReceiver : BroadcastReceiver() {
 
         Log.i(TAG, "$name ${if (plugged) "plugged" else "unplugged"} (mic=$hasMic)")
 
-        if (plugged) {
-            DiracService.publish(IDiracService.DEVICE_WIRED, name)
-        } else {
-            DiracService.publish(IDiracService.DEVICE_NONE, null)
-        }
+		
     }
 
     private companion object {

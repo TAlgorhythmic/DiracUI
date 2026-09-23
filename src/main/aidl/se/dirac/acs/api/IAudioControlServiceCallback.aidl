@@ -5,7 +5,7 @@ import se.dirac.acs.api.OutputSettings;
 
 interface IAudioControlServiceCallback {
 	/** Unused */
-    void onFilterAdd(long j, int[] iArr);
+    void onFilterAdd(long j, in int[] iArr);
 
 	/** Unused */
     void onSyncDone();
@@ -13,7 +13,7 @@ interface IAudioControlServiceCallback {
 	/** Unused */
     void onSetUser(String str);
 
-    void onSettingsChanged(Output output, OutputSettings outputSettings);
+    void onSettingsChanged(in Output output, in OutputSettings outputSettings);
 
 	/** Unused */
     void onRoutingChanged(int i);
