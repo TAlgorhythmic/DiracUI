@@ -7,14 +7,14 @@ import android.os.Parcelable
 class Filter : Parcelable {
 	companion object {
 		val CREATOR: Parcelable.Creator<Filter> = FilterCreator()
-		val NOTHING_FILTER: Filter = Filter(
-			id = 101, // Arbitrary id
+		var INTERNAL_FILTER: Filter = Filter(
+			id = -1, // Arbitrary id
 			name = "Nothing",
 			vendor = "Nobody",
 			Usecase.INTERNAL_POWERSOUND,
-			sfxAvailable = false,
-			eqAvailable = false,
-			licence = 3, // 3 Means device, dirac service treats it as no questions asked and doesn't scream at you
+			sfxAvailable = true,
+			eqAvailable = true,
+			licence = 3,
 			productId = "NO_ID"
 		)
 

@@ -24,8 +24,6 @@ class MainActivity : Activity() {
 	private lateinit var sfxEnabled: Switch
 	private lateinit var eqEnabled: Switch
 
-	private val headsetReceiver = HeadsetReceiver()
-
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		activeUi = this
@@ -38,36 +36,28 @@ class MainActivity : Activity() {
 		eqEnabled = elements.eqEnabled
 
 		setContentView(elements.view)
-		requestBluetoothPermission()
-	}
 
-	override fun onStart() {
-		super.onStart()
-
-		// ACTION_HEADSET_PLUG is FLAG_RECEIVER_REGISTERED_ONLY, so it has to be
-		// registered here rather than in the manifest. It is sticky: registering
-		// delivers the current plug state immediately.
-		val filter = IntentFilter(AudioManager.ACTION_HEADSET_PLUG)
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			registerReceiver(headsetReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-		} else {
-			registerReceiver(headsetReceiver, filter)
-		}
-	}
-
-	override fun onStop() {
-		super.onStop()
-		activeUi = null
-	}
-
-	// Below API 31 the install-time BLUETOOTH permission is enough. From 31 on
-	// the ACL broadcasts are not delivered at all until this is granted.
-	private fun requestBluetoothPermission() {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
 
 		if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
 			requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQUEST_BLUETOOTH)
 		}
+	}
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String?>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+		if (requestCode == REQUEST_BLUETOOTH) {
+			
+		}
+    }
+
+	override fun onStart() {
+		super.onStart()
+	}
+
+	override fun onStop() {
+		super.onStop()
+		activeUi = null
 	}
 
 	fun updateUi(settings: OutputSettings, output: Output) {

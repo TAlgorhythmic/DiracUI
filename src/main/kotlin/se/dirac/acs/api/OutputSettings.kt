@@ -1,8 +1,11 @@
 package se.dirac.acs.api
 
+import android.database.Cursor
 import android.os.BadParcelableException
 import android.os.Parcel
 import android.os.Parcelable
+import me.algorhythmics.App
+import java.util.EnumSet
 
 class OutputSettings : Parcelable {
 	companion object {
@@ -15,7 +18,7 @@ class OutputSettings : Parcelable {
 	var eqEnabled: Boolean = false
 	var eqBands: FloatArray = FloatArray(7)
 	var device: Device = Device.NOTHING_DEVICE
-	var filter: Filter = Filter.NOTHING_FILTER
+	var filter: Filter = Filter.INTERNAL_FILTER
 
 	constructor(device: Device, filter: Filter) {
 		this.device = device
@@ -45,6 +48,26 @@ class OutputSettings : Parcelable {
 		} catch (e2: Exception) {
 			throw BadParcelableException(e2)
 		}
+	}
+
+	constructor(c: Cursor) {
+		val instance = App.getInstance()
+		filter = instance.filters.getOrDefault(c.getInt(c.getColumnIndex("filter")).toLong(), Filter.NOTHING_FILTER)
+		device = if (filter.id.toInt() == -1) Device.NOTHING_DEVICE
+			else instance.devices.getOrDefault(c.getInt(c.getColumnIndex("device")).toLong(), Device.NOTHING_DEVICE)
+
+		// If issues arise, disallow external usecases in internal and viceversa
+		enabled = c.getInt(c.getColumnIndex("enabled")) != 0
+		filterEnabled = c.getInt(c.getColumnIndex("filterEnabled")) != 0
+		sfxEnabled = filter.sfxAvailable && c.getInt(c.getColumnIndex("sfxEnabled")) != 0
+		eqEnabled = filter.eqAvailable && c.getInt(c.getColumnIndex("eqEnabled")) != 0
+		eqBands[0] = c.getFloat(c.getColumnIndex("band0"))
+		eqBands[1] = c.getFloat(c.getColumnIndex("band1"))
+		eqBands[2] = c.getFloat(c.getColumnIndex("band2"))
+		eqBands[3] = c.getFloat(c.getColumnIndex("band3"))
+		eqBands[4] = c.getFloat(c.getColumnIndex("band4"))
+		eqBands[5] = c.getFloat(c.getColumnIndex("band5"))
+		eqBands[6] = c.getFloat(c.getColumnIndex("band6"))
 	}
 
 	override fun describeContents(): Int {

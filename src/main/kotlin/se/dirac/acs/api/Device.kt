@@ -8,7 +8,7 @@ class Device : Parcelable {
 	companion object {
 		val CREATOR: Parcelable.Creator<Device> = DeviceCreator()
 		val NOTHING_DEVICE: Device = Device(
-		id = 100, // Arbitrary id
+			id = -1, // device -1 means no device
 			name = "Nothing",
 			System.currentTimeMillis(),
 			filters = List(1) {Filter.NOTHING_FILTER}
@@ -30,7 +30,7 @@ class Device : Parcelable {
 		}
 	}
 
-    val id: Long
+    var id: Long
     val timeAdded: Long
     val filterAvailable: Boolean
     val filters: List<Filter>
