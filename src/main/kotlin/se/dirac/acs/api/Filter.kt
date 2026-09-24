@@ -93,7 +93,7 @@ class Filter : Parcelable {
         }
 
         override fun newArray(length: Int): Array<out Filter> {
-			return Array(length) {Filter.NOTHING_FILTER}
+			return Array(length) {Filter.INTERNAL_FILTER}
         }
 	}
 }

@@ -5,7 +5,6 @@ import android.os.BadParcelableException
 import android.os.Parcel
 import android.os.Parcelable
 import me.algorhythmics.App
-import java.util.EnumSet
 
 class OutputSettings : Parcelable {
 	companion object {
@@ -17,7 +16,7 @@ class OutputSettings : Parcelable {
 	var sfxEnabled: Boolean = false
 	var eqEnabled: Boolean = false
 	var eqBands: FloatArray = FloatArray(7)
-	var device: Device = Device.NOTHING_DEVICE
+	var device: Device = Device.INTERNAL_DEVICE
 	var filter: Filter = Filter.INTERNAL_FILTER
 
 	constructor(device: Device, filter: Filter) {
@@ -52,9 +51,9 @@ class OutputSettings : Parcelable {
 
 	constructor(c: Cursor) {
 		val instance = App.getInstance()
-		filter = instance.filters.getOrDefault(c.getInt(c.getColumnIndex("filter")).toLong(), Filter.NOTHING_FILTER)
-		device = if (filter.id.toInt() == -1) Device.NOTHING_DEVICE
-			else instance.devices.getOrDefault(c.getInt(c.getColumnIndex("device")).toLong(), Device.NOTHING_DEVICE)
+		filter = instance.filters.getOrDefault(c.getInt(c.getColumnIndex("filter")).toLong(), Filter.INTERNAL_FILTER)
+		device = if (filter.id.toInt() == -1) Device.INTERNAL_DEVICE
+			else instance.devices.getOrDefault(c.getInt(c.getColumnIndex("device")).toLong(), Device.INTERNAL_DEVICE)
 
 		// If issues arise, disallow external usecases in internal and viceversa
 		enabled = c.getInt(c.getColumnIndex("enabled")) != 0

@@ -7,11 +7,11 @@ import android.os.Parcelable
 class Device : Parcelable {
 	companion object {
 		val CREATOR: Parcelable.Creator<Device> = DeviceCreator()
-		val NOTHING_DEVICE: Device = Device(
+		var INTERNAL_DEVICE: Device = Device(
 			id = -1, // device -1 means no device
 			name = "Nothing",
 			System.currentTimeMillis(),
-			filters = List(1) {Filter.NOTHING_FILTER}
+			filters = List(1) {Filter.INTERNAL_FILTER}
 		)
 
 		fun deviceFromParcel(parcel: Parcel): Device {
@@ -75,7 +75,7 @@ class Device : Parcelable {
         }
 
         override fun newArray(length: Int): Array<out Device> {
-			return Array(length) { Device.NOTHING_DEVICE }
+			return Array(length) { Device.INTERNAL_DEVICE }
         }
 	}
 }

@@ -27,7 +27,7 @@ var BOUND: IAudioControlService? = null
 
 // Config state
 @Volatile
-var currentSettings: OutputSettings = OutputSettings(Device.NOTHING_DEVICE, Filter.INTERNAL_FILTER)
+var currentSettings: OutputSettings = OutputSettings(Device.INTERNAL_DEVICE, Filter.INTERNAL_FILTER)
 @Volatile
 var currentOutput: Output = Output.INTERNAL
 
@@ -79,6 +79,7 @@ private val CONNECTION = object: ServiceConnection {
 		}
 		for (device in internalDevices) {
             instance.devices[device.id] = device
+			Device.INTERNAL_DEVICE = device
             for (filter in device.filters) {
                 instance.filters[filter.id] = filter
 				Filter.INTERNAL_FILTER = filter

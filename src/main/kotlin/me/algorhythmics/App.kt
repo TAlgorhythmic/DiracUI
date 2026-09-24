@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.database.sqlite.SQLiteDatabase
 import android.media.AudioManager
 import android.os.Build
 import se.dirac.acs.api.Device
@@ -32,7 +31,7 @@ class App : Application() {
 		instance = this
 		database = DbHelper(this)
 
-		devices[-1] = Device.NOTHING_DEVICE
+		devices[-1] = Device.INTERNAL_DEVICE
 		filters[-1] = Filter.INTERNAL_FILTER
 
 		// Register headset receiver
