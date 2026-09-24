@@ -1,43 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Android 6-11: install-time. Ignored from API 31 on. -->
-    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+	<!-- Android 6-11: install-time. Ignored from API 31 on. -->
+	<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
 
-    <!-- Android 12+: runtime-granted, must be requested before use. -->
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+	<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<application android:name=".App" android:persistent="true" android:label="DiracUI">
+		<activity android:name=".MainActivity" android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
 
-    <application android:label="DiracUI">
-        <activity android:name=".MainActivity" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+		<receiver
+			android:name=".BluetoothReceiver"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+				<action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+			</intent-filter>
+		</receiver>
 
-        <receiver
-            android:name=".BluetoothReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
-                <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
-            </intent-filter>
-        </receiver>
+		<receiver
+			android:name=".UnlockReceiver"
+			android:exported="true"
+			android:directBootAware="true">
+			<intent-filter>
+				<action android:name="android.intent.action.USER_UNLOCKED" />
+			</intent-filter>
+		</receiver>
 
-        <receiver
-            android:name=".BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Binder host for IDiracService. exported=false: only this app, or
-             another process running as the same UID, may bind. -->
-        <service
-            android:name=".DiracService"
-            android:exported="false" />
-    </application>
+		<service
+			android:name=".PersistentBackgroundService"
+			android:exported="false" />
+	</application>
 </manifest>

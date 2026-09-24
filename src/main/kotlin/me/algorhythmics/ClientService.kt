@@ -56,34 +56,16 @@ private val serviceCallback = object: IAudioControlServiceCallback.Stub() {
 	override fun onSetUser(str: String?) {/* Unused */}
 	override fun onSyncDone() {/* Unused */}
 
-	override fun onSettingsChanged(output: Output, outputSettings: OutputSettings) {
-		currentOutput = output
-		currentSettings = outputSettings
+	override fun onSettingsChanged(output: Output?, outputSettings: OutputSettings?) {
+		if (output != null)
+			currentOutput = output
+		if (outputSettings != null)
+			currentSettings = outputSettings
 
 		// Update UI if active
 		val ui = MainActivity.getActiveUi()
 		ui?.runOnUiThread { ui.updateUi(currentSettings, currentOutput) }
 	}
-}
-
-fun startService(ctx: Context): Boolean {
-	try {
-		Log.i(TAG, "Attempting to start DiracAudioControlService...")
-	    val res = ctx.startService(INTENT)
-
-		// Service doesn't exist, so bad install
-		if (res == null) {
-			Log.e(TAG, "Failed to start service, probably doesn't exist")
-			return false
-		}
-	} catch (e: Exception) {
-        Log.e(TAG, "Failed to start service", e)
-		return false
-	}
-
-	Log.i(TAG, "Service started")
-	STARTED = true
-	return true
 }
 
 fun bindService(ctx: Context): Boolean {
@@ -97,5 +79,6 @@ fun bindService(ctx: Context): Boolean {
 }
 
 fun isConnected(): Boolean {
-	return BOUND != null && (BOUND as IBinder).isBinderAlive
+	val bound = BOUND // Prevent mutation while in use
+	return bound != null && bound.asBinder().isBinderAlive
 }
