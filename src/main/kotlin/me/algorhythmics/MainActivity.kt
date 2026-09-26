@@ -70,6 +70,10 @@ class MainActivity : Activity() {
 		if (external)
 			elements.device.update(instance.devices.values.filter {dev -> dev.id >= 0}.toList(), currentSettings.device)
 
+		if (external)
+			elements.usecase.update(instance.externalUsecases.values.toList(), currentSettings.filter.usecase)
+		else elements.usecase.update(instance.internalUsecases.values.toList(), currentSettings.filter.usecase)
+
 		updating = false
 	}
 
