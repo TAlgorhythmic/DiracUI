@@ -77,6 +77,9 @@ fun applyUpdatedSettings() {
 		!bound.setParameter(preset.filter.usecase, Parameter.LOUDNESS_ID, preset.loudness, bundle)
 	) { Log.w(TAG, "Service rejected preset '$presetName'") }
 	toastError(bundle)
+    MainActivity.getActiveUi()?.apply {
+		updateUi()
+	}
 }
 
 fun updateSettings(newSettings: OutputSettings): Boolean {

@@ -32,6 +32,7 @@ class BluetoothReceiver : BroadcastReceiver() {
 				Log.i(TAG, "disconnected: ${device.describe()}")
 
 				BLUETOOTH_ACTIVE = null
+				applyUpdatedSettings()
 			}
 		}
 	}

@@ -24,6 +24,8 @@ class HeadsetReceiver : BroadcastReceiver() {
 
         Log.i(TAG, "$name ${if (plugged) "plugged" else "unplugged"} (mic=$hasMic)")
 
-		// TODO
+		PLUGGED = plugged
+		if (plugged && BluetoothReceiver.BLUETOOTH_ACTIVE == null)
+			applyUpdatedSettings()
     }
 }

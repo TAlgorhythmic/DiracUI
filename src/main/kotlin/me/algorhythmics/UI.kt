@@ -5,13 +5,17 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.SeekBar
+import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import se.dirac.acs.api.Device
 
 data class UiElements (
 	val diracEnabled: Switch,
@@ -19,6 +23,10 @@ data class UiElements (
 	val sfxEnabled: Switch,
 	val eqEnabled: Switch,
 	val bands: EqBands,
+	val stereoWidth: SeekBar,
+	val tonalBalance: SeekBar,
+	val loudness: SeekBar,
+	val device: DeviceSelector,
 	val view: ScrollView,
 )
 
@@ -84,6 +92,37 @@ class EqBands(ctx: Context, bandCount: Int, private val onBandChange: (index: In
 	}
 }
 
+class DeviceSelector(ctx: Context, private val onDeviceSelected: (Device) -> Unit) : Spinner(ctx) {
+	private var devices = emptyList<Device>()
+	var selectedId: Long? = null
+		private set
+
+	init {
+		onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+			override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+				val device = devices[position]
+				// Spinner also fires for programmatic selections, so skip already selected devices
+				if (device.id == selectedId) return
+				selectedId = device.id
+				onDeviceSelected(device)
+			}
+			override fun onNothingSelected(parent: AdapterView<*>) {}
+		}
+	}
+
+	fun update(devices: List<Device>, selectedId: Long? = this.selectedId) {
+		this.devices = devices
+		adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, devices.map { it.name }).apply {
+			setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+		}
+		val index = devices.indexOfFirst { it.id == selectedId }.coerceAtLeast(0)
+		this.selectedId = devices.getOrNull(index)?.id
+		setSelection(index)
+	}
+}
+
+var updating: Boolean = false
+
 private fun switcher(ctx: MainActivity, name: String, callback: (Boolean) -> Unit): Switch {
 	return Switch(ctx).apply {
 		showText = false
@@ -93,9 +132,27 @@ private fun switcher(ctx: MainActivity, name: String, callback: (Boolean) -> Uni
 		)
 		text = name
 		setOnCheckedChangeListener {_: CompoundButton, newVal: Boolean ->
-			isEnabled = false
-			callback(newVal)
+			if (!updating) {
+				isEnabled = false
+				callback(newVal)
+			}
 		}
+	}
+}
+
+private fun seekBar(ctx: MainActivity, callback: (Float) -> Unit): SeekBar {
+	return SeekBar(ctx).apply {
+		max = 50
+		progress = 25
+		setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(bar: SeekBar, newProgress: Int, fromUser: Boolean) {
+				if (!fromUser) return
+				callback(newProgress / 25f - 1f)
+            }
+
+            override fun onStartTrackingTouch(p0: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(p0: android.widget.SeekBar?) {}
+        })
 	}
 }
 
@@ -118,11 +175,13 @@ fun composeUi(): UiElements {
 	val ui = MainActivity.getActiveUi()
 		?: throw IllegalStateException("App is not running, this shouldn't be called without a context")
 
-	val view = ScrollView(ui)
-
 	// Switches
 	val	diracEnabled = switcher(ui, "Dirac HD") {newValue: Boolean ->
 		currentSettings.enabled = newValue
+		updateSettings(currentSettings)
+	}
+	val device = DeviceSelector(ui) {newDevice: Device ->
+		currentSettings.device = newDevice
 		updateSettings(currentSettings)
 	}
 	val filterEnabled = switcher(ui, "Enable Filter") {newValue: Boolean ->
@@ -137,7 +196,54 @@ fun composeUi(): UiElements {
 		currentSettings.eqEnabled = newValue
 		updateSettings(currentSettings)
 	}
+	val equalizer = EqBands(ui, currentSettings.eqBands.size) { i: Int, gain: Float ->
+		currentSettings.eqBands[i] = gain
+		updateSettings(currentSettings)
+	}
+	val stereoWidthTitle = TextView(ui).apply { text = "Stereo Width" }
+	val stereoWidth = seekBar(ui) { newValue: Float ->
+		currentSettings.stereoWidth = newValue
+		updateSettings(currentSettings)
+	}
+	val tonalBalanceTitle = TextView(ui).apply { text = "Tonal Balance" }
+	val tonalBalance = seekBar(ui) { newValue: Float ->
+		currentSettings.tonalBalance = newValue
+		updateSettings(currentSettings)
+	}
+	val loudnessTitle = TextView(ui).apply { text = "Loudness" }
+	val loudness = seekBar(ui) { newValue: Float ->
+		currentSettings.loudness = newValue
+		updateSettings(currentSettings)
+	}
 
+	val content = LinearLayout(ui).apply { orientation = LinearLayout.VERTICAL }
 
-	return view
+	// Append all components
+	content.addView(diracEnabled)
+	content.addView(device)
+	content.addView(filterEnabled)
+	content.addView(sfxEnabled)
+	content.addView(eqEnabled)
+	content.addView(equalizer)
+	content.addView(stereoWidthTitle)
+	content.addView(stereoWidth)
+	content.addView(tonalBalanceTitle)
+	content.addView(tonalBalance)
+	content.addView(loudnessTitle)
+	content.addView(loudness)
+
+	val view = ScrollView(ui).apply { addView(content) }
+
+	return UiElements(
+		diracEnabled,
+		filterEnabled,
+		sfxEnabled,
+		eqEnabled,
+		equalizer,
+		stereoWidth,
+		tonalBalance,
+		loudness,
+		device,
+		view
+	)
 }
