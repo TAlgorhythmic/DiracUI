@@ -19,8 +19,8 @@ class DbHelper(ctx: Context) : SQLiteOpenHelper(ctx, NAME, null, VERSION) {
 			stereoWidth REAL NOT NULL DEFAULT 0.0,
 			tonalBalance REAL NOT NULL DEFAULT 0.0,
 			loudness REAL NOT NULL DEFAULT 0.0,
-			device INTEGER NOT NULL DEFAULT -1,
-			filter INTEGER NOT NULL DEFAULT -1
+			usecase INTEGER NOT NULL DEFAULT 1,
+			device INTEGER NOT NULL DEFAULT -1
 		)""")
 		db.execSQL("INSERT INTO presets(name) VALUES('internal')")
 		db.execSQL("INSERT INTO presets(name) VALUES('headphones')")

@@ -40,7 +40,6 @@ class OutputSettings : Parcelable {
 	}
 
 	constructor(parcel: Parcel) {
-		this.eqBands = FloatArray(7)
 		try {
 			this.device = parcel.readParcelable(Device::class.java.classLoader, Device::class.java)
 			?: throw BadParcelableException("No valid device in parcel")
@@ -50,6 +49,8 @@ class OutputSettings : Parcelable {
 			this.filterEnabled = flags[1]
 			this.sfxEnabled = flags[2]
 			this.eqEnabled = flags[3]
+			val bands = parcel.readInt()
+			this.eqBands = FloatArray(bands)
 			parcel.readFloatArray(this.eqBands)
 			this.filter = parcel.readParcelable(Filter::class.java.classLoader, Filter::class.java)
 			?: throw BadParcelableException("No valid filter")
@@ -62,9 +63,16 @@ class OutputSettings : Parcelable {
 
 	constructor(c: Cursor) {
 		val instance = App.getInstance()
-		filter = instance.filters.getOrDefault(c.getInt(c.getColumnIndex("filter")).toLong(), Filter.INTERNAL_FILTER)
-		device = if (filter.id.toInt() == -1) Device.INTERNAL_DEVICE
-			else instance.devices.getOrDefault(c.getInt(c.getColumnIndex("device")).toLong(), Device.INTERNAL_DEVICE)
+		val internal = device.id < 0
+		device = instance.devices.getOrDefault(c.getInt(c.getColumnIndex("device")).toLong(), Device.INTERNAL_DEVICE)
+		filter = if (device.filters.isNotEmpty()) device.filters[0] else Filter.INTERNAL_FILTER.apply {
+			val ucId = c.getInt(c.getColumnIndex("usecase"))
+			var uc = if (internal) instance.internalUsecases[ucId] else instance.externalUsecases[ucId]
+			usecase = uc ?: if (internal)
+				instance.internalUsecases[Usecase.INTERNAL_POWERSOUND.value] as UsecaseItem
+			else
+				instance.externalUsecases[Usecase.EXTERNAL_HEADSET.value] as UsecaseItem
+		}
 
 		// If issues arise, disallow external usecases in internal and viceversa
 		enabled = c.getInt(c.getColumnIndex("enabled")) != 0
@@ -84,6 +92,7 @@ class OutputSettings : Parcelable {
 	override fun writeToParcel(parcel: Parcel, i: Int) {
 		parcel.writeParcelable(this.device, 0)
 		parcel.writeBooleanArray(booleanArrayOf(this.enabled, this.filterEnabled, this.sfxEnabled, this.eqEnabled))
+		parcel.writeInt(this.eqBands.size)
 		parcel.writeFloatArray(this.eqBands)
 		parcel.writeParcelable(this.filter, 0)
 	}

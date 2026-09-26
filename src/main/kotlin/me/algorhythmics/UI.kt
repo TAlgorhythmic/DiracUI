@@ -20,36 +20,45 @@ data class UiElements (
 	val view: ScrollView,
 )
 
-// Band frequencies are unknown, the protocol only guarantees 7 float gains
-class EqBands(ctx: Context, onBandChange: (index: Int, gain: Float) -> Unit) : LinearLayout(ctx) {
-	private val labels = Array(BAND_COUNT) { TextView(ctx) }
-	private val sliders = Array(BAND_COUNT) { index ->
-		SeekBar(ctx).apply {
-			max = gainToProgress(MAX_GAIN)
-			progress = gainToProgress(0f)
-			setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-				override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
-					showGain(index, progressToGain(progress))
-					if (fromUser) onBandChange(index, progressToGain(progress))
-				}
-				override fun onStartTrackingTouch(bar: SeekBar) {}
-				override fun onStopTrackingTouch(bar: SeekBar) {}
-			})
-		}
-	}
+// Band frequencies are unknown, the protocol only guarantees a list of float gains
+class EqBands(ctx: Context, bandCount: Int, private val onBandChange: (index: Int, gain: Float) -> Unit) : LinearLayout(ctx) {
+	private var labels = emptyArray<TextView>()
+	private var sliders = emptyArray<SeekBar>()
+	val bandCount get() = sliders.size
 
 	init {
 		orientation = VERTICAL
-		for (i in 0 until BAND_COUNT) {
+		rebuild(bandCount)
+	}
+
+	fun update(bands: FloatArray) {
+		if (bands.size != bandCount) rebuild(bands.size)
+		bands.forEachIndexed { i, gain -> sliders[i].progress = gainToProgress(gain) }
+	}
+
+	private fun rebuild(count: Int) {
+		removeAllViews()
+		labels = Array(count) { TextView(context) }
+		sliders = Array(count) { createSlider(it) }
+		for (i in 0 until count) {
 			showGain(i, 0f)
 			addView(labels[i])
 			addView(sliders[i])
 		}
 	}
 
-	fun update(bands: FloatArray) {
-		require(bands.size == BAND_COUNT) { "Expected $BAND_COUNT bands, got ${bands.size}" }
-		bands.forEachIndexed { i, gain -> sliders[i].progress = gainToProgress(gain) }
+	private fun createSlider(index: Int) = SeekBar(context).apply {
+		max = gainToProgress(MAX_GAIN)
+		progress = gainToProgress(0f)
+		isEnabled = this@EqBands.isEnabled
+		setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+			override fun onProgressChanged(bar: SeekBar, progress: Int, fromUser: Boolean) {
+				showGain(index, progressToGain(progress))
+				if (fromUser) onBandChange(index, progressToGain(progress))
+			}
+			override fun onStartTrackingTouch(bar: SeekBar) {}
+			override fun onStopTrackingTouch(bar: SeekBar) {}
+		})
 	}
 
 	override fun setEnabled(enabled: Boolean) {
@@ -62,7 +71,6 @@ class EqBands(ctx: Context, onBandChange: (index: Int, gain: Float) -> Unit) : L
 	}
 
 	companion object {
-		const val BAND_COUNT = 7
 		const val MIN_GAIN = -12f
 		const val MAX_GAIN = 12f
 		const val GAIN_STEP = 0.5f
