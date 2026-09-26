@@ -16,18 +16,20 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import se.dirac.acs.api.Device
+import se.dirac.acs.api.UsecaseItem
 
 data class UiElements (
-	val diracEnabled: Switch,
-	val filterEnabled: Switch,
-	val sfxEnabled: Switch,
-	val eqEnabled: Switch,
-	val bands: EqBands,
-	val stereoWidth: SeekBar,
-	val tonalBalance: SeekBar,
-	val loudness: SeekBar,
-	val device: DeviceSelector,
-	val view: ScrollView,
+    val diracEnabled: Switch,
+    val filterEnabled: Switch,
+    val sfxEnabled: Switch,
+    val eqEnabled: Switch,
+    val bands: EqBands,
+    val stereoWidth: SeekBar,
+    val tonalBalance: SeekBar,
+    val loudness: SeekBar,
+    val device: Selector<Device>,
+	val usecase: Selector<UsecaseItem>,
+    val view: ScrollView,
 )
 
 // Band frequencies are unknown, the protocol only guarantees a list of float gains
@@ -92,31 +94,33 @@ class EqBands(ctx: Context, bandCount: Int, private val onBandChange: (index: In
 	}
 }
 
-class DeviceSelector(ctx: Context, private val onDeviceSelected: (Device) -> Unit) : Spinner(ctx) {
-	private var devices = emptyList<Device>()
-	var selectedId: Long? = null
+class Selector<T>(
+	ctx: Context,
+	private val label: (T) -> String,
+	private val onSelected: (T) -> Unit,
+) : Spinner(ctx) {
+	private var items = emptyList<T>()
+	var selected: T? = null
 		private set
 
 	init {
 		onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
 			override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-				val device = devices[position]
-				// Spinner also fires for programmatic selections, so skip already selected devices
-				if (device.id == selectedId) return
-				selectedId = device.id
-				onDeviceSelected(device)
+				val item = items[position]
+				// Spinner also fires for programmatic selections, so skip the already selected item
+				if (item == selected) return
+				selected = item
+				onSelected(item)
 			}
 			override fun onNothingSelected(parent: AdapterView<*>) {}
 		}
 	}
 
-	fun update(devices: List<Device>, selectedId: Long? = this.selectedId) {
-		this.devices = devices
-		adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, devices.map { it.name }).apply {
-			setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-		}
-		val index = devices.indexOfFirst { it.id == selectedId }.coerceAtLeast(0)
-		this.selectedId = devices.getOrNull(index)?.id
+	fun update(items: List<T>, selected: T? = this.selected) {
+		this.items = items
+		adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, items.map(label)).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+		val index = items.indexOf(selected).coerceAtLeast(0)
+		this.selected = items.getOrNull(index)
 		setSelection(index)
 	}
 }
@@ -157,8 +161,7 @@ private fun seekBar(ctx: MainActivity, callback: (Float) -> Unit): SeekBar {
 }
 
 fun toast(msg: String) {
-	val ui = MainActivity.getActiveUi()
-    ui?.runOnUiThread { Toast.makeText(ui, msg, Toast.LENGTH_LONG).show() }
+	MainActivity.getActiveUi()?.apply { runOnUiThread { Toast.makeText(this, msg, Toast.LENGTH_LONG).show() } }
 }
 
 fun toastError(status: Bundle) {
@@ -166,7 +169,7 @@ fun toastError(status: Bundle) {
 		val clazz = status.getString(Keys.CAUSE_CLASS)
 		val message = status.getString(Keys.CAUSE_MESSAGE)
 		val msg = "$clazz: $message"
-        Log.e("ServiceError", msg)
+		Log.e("ServiceError", msg)
 		toast(msg)
 	}
 }
@@ -180,8 +183,14 @@ fun composeUi(): UiElements {
 		currentSettings.enabled = newValue
 		updateSettings(currentSettings)
 	}
-	val device = DeviceSelector(ui) {newDevice: Device ->
+	val device = Selector(ui, { dev: Device -> dev.name }) {newDevice: Device ->
 		currentSettings.device = newDevice
+		if (newDevice.id >= 0 && newDevice.filters.isNotEmpty())
+			currentSettings.filter = newDevice.filters[0]
+		updateSettings(currentSettings)
+	}
+	val usecase = Selector(ui, { uc: UsecaseItem -> uc.name }) {newUsecase: UsecaseItem ->
+		currentSettings.filter.usecase = newUsecase
 		updateSettings(currentSettings)
 	}
 	val filterEnabled = switcher(ui, "Enable Filter") {newValue: Boolean ->
@@ -221,6 +230,7 @@ fun composeUi(): UiElements {
 	// Append all components
 	content.addView(diracEnabled)
 	content.addView(device)
+	content.addView(usecase)
 	content.addView(filterEnabled)
 	content.addView(sfxEnabled)
 	content.addView(eqEnabled)
@@ -244,6 +254,7 @@ fun composeUi(): UiElements {
 		tonalBalance,
 		loudness,
 		device,
+		usecase,
 		view
 	)
 }

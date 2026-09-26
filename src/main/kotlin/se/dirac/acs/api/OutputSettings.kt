@@ -20,7 +20,7 @@ class OutputSettings : Parcelable {
 	var filterEnabled: Boolean = false
 	var sfxEnabled: Boolean = false
 	var eqEnabled: Boolean = false
-	var eqBands: FloatArray = FloatArray(7)
+	var eqBands: FloatArray = FloatArray(10)
 	var device: Device = Device.INTERNAL_DEVICE
 	var filter: Filter = Filter.INTERNAL_FILTER
 
@@ -39,9 +39,10 @@ class OutputSettings : Parcelable {
 		}
 	}
 
+	@Suppress("DEPRECATION")
 	constructor(parcel: Parcel) {
 		try {
-			this.device = parcel.readParcelable(Device::class.java.classLoader, Device::class.java)
+			this.device = parcel.readParcelable(Device::class.java.classLoader)
 			?: throw BadParcelableException("No valid device in parcel")
 			val flags = BooleanArray(4)
 			parcel.readBooleanArray(flags)
@@ -52,7 +53,7 @@ class OutputSettings : Parcelable {
 			val bands = parcel.readInt()
 			this.eqBands = FloatArray(bands)
 			parcel.readFloatArray(this.eqBands)
-			this.filter = parcel.readParcelable(Filter::class.java.classLoader, Filter::class.java)
+			this.filter = parcel.readParcelable(Filter::class.java.classLoader)
 			?: throw BadParcelableException("No valid filter")
 		} catch (e: BadParcelableException) {
 			throw e
@@ -63,10 +64,11 @@ class OutputSettings : Parcelable {
 
 	constructor(c: Cursor) {
 		val instance = App.getInstance()
+		device = instance.devices[c.getInt(c.getColumnIndexOrThrow("device")).toLong()] ?: Device.INTERNAL_DEVICE
 		val internal = device.id < 0
-		device = instance.devices.getOrDefault(c.getInt(c.getColumnIndex("device")).toLong(), Device.INTERNAL_DEVICE)
-		filter = if (device.filters.isNotEmpty()) device.filters[0] else Filter.INTERNAL_FILTER.apply {
-			val ucId = c.getInt(c.getColumnIndex("usecase"))
+		val ucId = c.getInt(c.getColumnIndexOrThrow("usecase"))
+		filter = if (device.filters.isNotEmpty()) device.filters[0] else Filter.INTERNAL_FILTER
+		filter.apply {
 			var uc = if (internal) instance.internalUsecases[ucId] else instance.externalUsecases[ucId]
 			usecase = uc ?: if (internal)
 				instance.internalUsecases[Usecase.INTERNAL_POWERSOUND.value] as UsecaseItem
@@ -75,18 +77,19 @@ class OutputSettings : Parcelable {
 		}
 
 		// If issues arise, disallow external usecases in internal and viceversa
-		enabled = c.getInt(c.getColumnIndex("enabled")) != 0
-		filterEnabled = c.getInt(c.getColumnIndex("filterEnabled")) != 0
-		sfxEnabled = filter.sfxAvailable && c.getInt(c.getColumnIndex("sfxEnabled")) != 0
-		eqEnabled = filter.bandCount > 0 && c.getInt(c.getColumnIndex("eqEnabled")) != 0
-		eqBands = c.getString(c.getColumnIndex("bands")).split(';').map { v: String -> v.toFloat() }.toFloatArray()
-		stereoWidth = c.getFloat(c.getColumnIndex("stereoWidth"))
-		tonalBalance = c.getFloat(c.getColumnIndex("tonalBalance"))
-		loudness = c.getFloat(c.getColumnIndex("loudness"))
+		enabled = c.getInt(c.getColumnIndexOrThrow("enabled")) != 0
+		filterEnabled = c.getInt(c.getColumnIndexOrThrow("filterEnabled")) != 0
+		sfxEnabled = filter.sfxAvailable && c.getInt(c.getColumnIndexOrThrow("sfxEnabled")) != 0
+		eqEnabled = filter.bandCount > 0 && c.getInt(c.getColumnIndexOrThrow("eqEnabled")) != 0
+		val bandsStr = c.getString(c.getColumnIndexOrThrow("bands"))
+		eqBands = if (bandsStr.isEmpty()) FloatArray(0) else bandsStr.split(';').map { v: String -> v.toFloat() }.toFloatArray()
+		stereoWidth = c.getFloat(c.getColumnIndexOrThrow("stereoWidth"))
+		tonalBalance = c.getFloat(c.getColumnIndexOrThrow("tonalBalance"))
+		loudness = c.getFloat(c.getColumnIndexOrThrow("loudness"))
 	}
 
 	override fun describeContents(): Int {
-		return 1
+		return 0
 	}
 
 	override fun writeToParcel(parcel: Parcel, i: Int) {

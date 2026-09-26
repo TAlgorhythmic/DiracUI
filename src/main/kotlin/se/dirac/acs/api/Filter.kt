@@ -19,12 +19,13 @@ class Filter : Parcelable {
 			bandCount = 10
 		)
 
+		@Suppress("DEPRECATION")
 		fun filterFromParcel(parcel: Parcel): Filter {
 			try {
 				val id = parcel.readLong()
 				val name = parcel.readString()
 				val vendor = parcel.readString()
-				val usecase = parcel.readParcelable(UsecaseItem::class.java.classLoader, UsecaseItem::class.java)
+				val usecase = parcel.readParcelable(UsecaseItem::class.java.classLoader)
 					?: throw BadParcelableException("No valid usecase in parcel")
 				val sfxAvailable = parcel.readByte() != 0.toByte()
 				val bandCount = parcel.readInt()
@@ -77,7 +78,7 @@ class Filter : Parcelable {
     }
 
     override fun describeContents(): Int {
-        return 2
+        return 0
     }
 
     override fun toString(): String {

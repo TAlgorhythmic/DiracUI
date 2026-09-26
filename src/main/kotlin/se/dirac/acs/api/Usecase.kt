@@ -10,7 +10,10 @@ enum class Usecase(val value: Int) {
 
 	companion object {
 		fun fromInt(i: Int): Usecase {
-			if (i in 1..<5) return Usecase.entries[i - 1]
+			for (entry in entries) {
+				if (entry.value == i)
+					return entry
+			}
 
 			throw IllegalArgumentException("unsupported value: $i")
 		}

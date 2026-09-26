@@ -23,11 +23,9 @@ class MainActivity : Activity() {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
-		activeUi = this
 
 		// Init UI handles
 		elements = composeUi()
-		updateUi()
 		setContentView(elements.view)
 
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
@@ -39,6 +37,8 @@ class MainActivity : Activity() {
 
 	override fun onStart() {
 		super.onStart()
+		activeUi = this
+		updateUi()
 	}
 
 	override fun onStop() {
@@ -60,15 +60,15 @@ class MainActivity : Activity() {
 		if (currentSettings.filter.bandCount > 0) elements.bands.update(currentSettings.eqBands)
 		elements.bands.isEnabled = currentSettings.eqEnabled && currentSettings.filter.bandCount > 0
 		elements.stereoWidth.progress = (25f * (currentSettings.stereoWidth + 1f)).toInt()
-		elements.tonalBalance.progress = (25f * (currentSettings.stereoWidth + 1f)).toInt()
-		elements.loudness.progress = (25f * (currentSettings.stereoWidth + 1f)).toInt()
+		elements.tonalBalance.progress = (25f * (currentSettings.tonalBalance + 1f)).toInt()
+		elements.loudness.progress = (25f * (currentSettings.loudness + 1f)).toInt()
 
 		val instance = App.getInstance()
 		val external = currentSettings.device.id >= 0
 
 		elements.device.isEnabled = external
 		if (external)
-			elements.device.update(instance.devices.values.filter {dev -> dev.id >= 0}.toList(), currentSettings.device.id)
+			elements.device.update(instance.devices.values.filter {dev -> dev.id >= 0}.toList(), currentSettings.device)
 
 		updating = false
 	}

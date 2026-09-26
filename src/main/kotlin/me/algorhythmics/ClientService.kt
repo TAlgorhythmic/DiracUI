@@ -65,41 +65,45 @@ private fun savePreset(name: String) {
 fun applyUpdatedSettings() {
 	val bound = BOUND ?: return
 
-	val internal = !HeadsetReceiver.PLUGGED && BluetoothReceiver.BLUETOOTH_ACTIVE == null
-	val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
-		?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
-	val bundle = Bundle()
-	val preset = loadPreset(presetName, internal, presetName != "headphones" && presetName != "internal")
+	App.getInstance().worker.execute {
+		val internal = !HeadsetReceiver.PLUGGED && BluetoothReceiver.BLUETOOTH_ACTIVE == null
+		val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
+			?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
+		val bundle = Bundle()
+		val preset = loadPreset(presetName, internal, presetName != "headphones" && presetName != "internal")
 
-	if (!bound.setOutput2(preset, bundle) ||
-		!bound.setParameter(preset.filter.usecase, Parameter.STEREO_WIDTH_ID, preset.stereoWidth, bundle) ||
-		!bound.setParameter(preset.filter.usecase, Parameter.TONAL_BALANCE_ID, preset.tonalBalance, bundle) ||
-		!bound.setParameter(preset.filter.usecase, Parameter.LOUDNESS_ID, preset.loudness, bundle)
-	) { Log.w(TAG, "Service rejected preset '$presetName'") }
-	toastError(bundle)
-    MainActivity.getActiveUi()?.apply {
-		updateUi()
+		if (!bound.setOutput2(preset, bundle) ||
+			!bound.setParameter(preset.filter.usecase, Parameter.STEREO_WIDTH_ID, preset.stereoWidth, bundle) ||
+			!bound.setParameter(preset.filter.usecase, Parameter.TONAL_BALANCE_ID, preset.tonalBalance, bundle) ||
+			!bound.setParameter(preset.filter.usecase, Parameter.LOUDNESS_ID, preset.loudness, bundle)
+		) { Log.w(TAG, "Service rejected preset '$presetName'") }
+		toastError(bundle)
+
+		currentSettings = preset
+		MainActivity.getActiveUi()?.apply { runOnUiThread { updateUi() } }
+    }
+}
+
+fun updateSettings(newSettings: OutputSettings) {
+	val bundle = Bundle()
+	val bound = BOUND ?: return
+	App.getInstance().worker.execute {
+		if (bound.setOutput2(newSettings, bundle) &&
+			bound.setParameter(newSettings.filter.usecase, Parameter.STEREO_WIDTH_ID, newSettings.stereoWidth, bundle) &&
+			bound.setParameter(newSettings.filter.usecase, Parameter.TONAL_BALANCE_ID, newSettings.tonalBalance, bundle) &&
+			bound.setParameter(newSettings.filter.usecase, Parameter.LOUDNESS_ID, newSettings.loudness, bundle)
+		) {
+			val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
+			?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
+			savePreset(presetName)
+			currentSettings = newSettings
+			MainActivity.getActiveUi()?.apply { runOnUiThread { updateUi() } }
+		}
+		toastError(bundle) // Notice if remote error
 	}
 }
 
-fun updateSettings(newSettings: OutputSettings): Boolean {
-	val bundle = Bundle()
-	val bound = BOUND ?: return false
-	if (!bound.setOutput2(newSettings, bundle) ||
-		!bound.setParameter(newSettings.filter.usecase, Parameter.STEREO_WIDTH_ID, newSettings.stereoWidth, bundle) ||
-		!bound.setParameter(newSettings.filter.usecase, Parameter.TONAL_BALANCE_ID, newSettings.tonalBalance, bundle) ||
-		!bound.setParameter(newSettings.filter.usecase, Parameter.LOUDNESS_ID, newSettings.loudness, bundle)
-	) return false
-
-	val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
-		?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
-	savePreset(presetName)
-	toastError(bundle) // Notice if remote error
-
-	return true
-}
-
-private val CONNECTION = object: ServiceConnection {
+private val CONNECTION: ServiceConnection = object: ServiceConnection {
     override fun onServiceConnected(p0: ComponentName, binder: IBinder) {
 		val bind = IAudioControlService.Stub.asInterface(binder)
         BOUND = bind
@@ -107,67 +111,79 @@ private val CONNECTION = object: ServiceConnection {
 
 		val instance = App.getInstance()
 
-		// Usecases
-		instance.internalUsecases.clear()
-		instance.externalUsecases.clear()
-		val bundle1 = Bundle()
-		val internalUsecases = bind.listUsecases(Output.INTERNAL, bundle1)
-		val externalUsecases = bind.listUsecases(Output.EXTERNAL, bundle1)
-		toastError(bundle1)
+		instance.worker.execute {
+			// Usecases
+			instance.internalUsecases.clear()
+			instance.externalUsecases.clear()
+			val bundle1 = Bundle()
+			val internalUsecases = bind.listUsecases(Output.INTERNAL, bundle1)
+			val externalUsecases = bind.listUsecases(Output.EXTERNAL, bundle1)
+			toastError(bundle1)
 
-		for (internal in internalUsecases)
-			instance.internalUsecases[internal.id] = internal
-		for (external in externalUsecases)
-			instance.externalUsecases[external.id] = external
+			for (internal in internalUsecases)
+				instance.internalUsecases[internal.id] = internal
+			for (external in externalUsecases)
+				instance.externalUsecases[external.id] = external
 
-		// Initialize devices and filters
-		instance.devices.clear()
-		instance.filters.clear()
+			// Initialize devices and filters
+			instance.devices.clear()
+			instance.filters.clear()
 
-		val bundle = Bundle()
-		val devices = bind.listDevices2("en", Output.EXTERNAL, bundle)
-		val internalDevices = bind.listDevices2("en", Output.INTERNAL, bundle)
-		toastError(bundle)
+			val bundle = Bundle()
+			val devices = bind.listDevices2("en", Output.EXTERNAL, bundle)
+			val internalDevices = bind.listDevices2("en", Output.INTERNAL, bundle)
+			toastError(bundle)
 
-		for (device in devices) {
-            instance.devices[device.id] = device
-            for (filter in device.filters) {
-				if (filter.usecase.getOutput() == Output.INTERNAL)
-					filter.usecase = internalUsecases[filter.usecase.id]
-				else filter.usecase = externalUsecases[filter.usecase.id]
-                instance.filters[filter.id] = filter
-            }
+			for (device in devices) {
+				instance.devices[device.id] = device
+				for (filter in device.filters) {
+					if (filter.usecase.getOutput() == Output.INTERNAL)
+						filter.usecase = instance.internalUsecases[filter.usecase.id]
+							?: instance.internalUsecases[Usecase.INTERNAL_POWERSOUND.value] as UsecaseItem
+					else filter.usecase = instance.externalUsecases[filter.usecase.id]
+							?: instance.externalUsecases[Usecase.EXTERNAL_HEADSET.value] as UsecaseItem
+					instance.filters[filter.id] = filter
+				}
+			}
+			for (device in internalDevices) {
+				instance.devices[device.id] = device
+				Device.INTERNAL_DEVICE = device
+				for (filter in device.filters) {
+					if (filter.usecase.getOutput() == Output.INTERNAL)
+						filter.usecase = internalUsecases[filter.usecase.id]
+							?: instance.internalUsecases[Usecase.INTERNAL_POWERSOUND.value] as UsecaseItem
+					else filter.usecase = externalUsecases[filter.usecase.id]
+							?: instance.externalUsecases[Usecase.EXTERNAL_HEADSET.value] as UsecaseItem
+					instance.filters[filter.id] = filter
+					Filter.INTERNAL_FILTER = filter
+				}
+			}
+
+			val bundle2 = Bundle()
+			bind.registerCallback2(serviceCallback, bundle2)
+			toastError(bundle2)
+
+			applyUpdatedSettings()
 		}
-		for (device in internalDevices) {
-            instance.devices[device.id] = device
-			Device.INTERNAL_DEVICE = device
-            for (filter in device.filters) {
-				if (filter.usecase.getOutput() == Output.INTERNAL)
-					filter.usecase = internalUsecases[filter.usecase.id]
-				else filter.usecase = externalUsecases[filter.usecase.id]
-                instance.filters[filter.id] = filter
-				Filter.INTERNAL_FILTER = filter
-            }
-		}
+	}
 
-		applyUpdatedSettings()
-    }
-
-    override fun onServiceDisconnected(p0: ComponentName) {
-        BOUND = null
+	override fun onServiceDisconnected(p0: ComponentName) {
+		BOUND = null
 		Log.i(TAG, "Service disconnected, Reconnecting")
+		App.getInstance().unbindService(CONNECTION)
 		bindService(App.getInstance())
-    }
+	}
 
-    override fun onNullBinding(name: ComponentName?) {
-        super.onNullBinding(name)
+	override fun onNullBinding(name: ComponentName?) {
+		super.onNullBinding(name)
 		Log.w(TAG, "Null binding received")
-    }
+	}
 
-    override fun onBindingDied(name: ComponentName?) {
+	override fun onBindingDied(name: ComponentName?) {
         super.onBindingDied(name)
 		Log.w(TAG, "Bound service died for some reason? Reconnecting")
 		BOUND = null
+		App.getInstance().unbindService(CONNECTION)
 		bindService(App.getInstance())
     }
 }
@@ -179,14 +195,19 @@ private val serviceCallback = object: IAudioControlServiceCallback.Stub() {
 	override fun onSyncDone() {/* Unused */}
 
 	override fun onSettingsChanged(output: Output?, outputSettings: OutputSettings?) {
+		val old = currentSettings
+
 		if (output != null)
 			currentOutput = output
 		if (outputSettings != null)
 			currentSettings = outputSettings
+		currentSettings.stereoWidth = old.stereoWidth
+		currentSettings.tonalBalance = old.tonalBalance
+		currentSettings.loudness = old.loudness
 
 		// Update UI if active
 		val ui = MainActivity.getActiveUi()
-		ui?.runOnUiThread { ui.updateUi(currentSettings, currentOutput) }
+		ui?.runOnUiThread { ui.updateUi() }
 	}
 }
 

@@ -12,6 +12,8 @@ import android.os.Build
 import se.dirac.acs.api.Device
 import se.dirac.acs.api.Filter
 import se.dirac.acs.api.UsecaseItem
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class App : Application() {
 	companion object {
@@ -26,6 +28,8 @@ class App : Application() {
 	val filters: HashMap<Long, Filter> = HashMap()
 	val internalUsecases: HashMap<Int, UsecaseItem> = HashMap()
 	val externalUsecases: HashMap<Int, UsecaseItem> = HashMap()
+
+	val worker: ExecutorService = Executors.newSingleThreadExecutor()
 
 	lateinit var database: DbHelper
 
@@ -44,17 +48,6 @@ class App : Application() {
 		} else {
 			registerReceiver(HeadsetReceiver(), headsetFilter)
 		}
-
-		if (hasBluetoothPerm()) {
-			val filter = IntentFilter().apply {
-				addAction(BluetoothDevice.ACTION_ACL_CONNECTED)
-				addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED)
-			}
-			registerReceiver(BluetoothReceiver(), filter)
-		}
-
-		// Register user unlock receiver
-		registerReceiver(UnlockReceiver(), IntentFilter(Intent.ACTION_USER_UNLOCKED))
     }
 
 	fun hasBluetoothPerm(): Boolean {

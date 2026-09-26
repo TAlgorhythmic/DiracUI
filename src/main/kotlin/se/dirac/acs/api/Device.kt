@@ -48,7 +48,7 @@ class Device : Parcelable {
 
 
     override fun describeContents(): Int {
-        return 3
+        return 0
     }
 
     override fun toString(): String {

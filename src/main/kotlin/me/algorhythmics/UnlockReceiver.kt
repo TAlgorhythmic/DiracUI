@@ -11,8 +11,8 @@ class UnlockReceiver : BroadcastReceiver() {
 	/** Triggers when user first unlocks, so that storage is decrypted, hence can be accessed by dirac */
     override fun onReceive(ctx: Context, intent: Intent) {
 		if (intent.action != Intent.ACTION_USER_UNLOCKED) return
-        Log.i(TAG, "User unlock received, binding...")
+		Log.i(TAG, "User unlock received, binding...")
 
-		bindService(ctx)
+		bindService(App.getInstance())
     }
 }
