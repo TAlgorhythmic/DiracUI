@@ -15,7 +15,9 @@ import se.dirac.acs.api.IAudioControlService
 import se.dirac.acs.api.IAudioControlServiceCallback
 import se.dirac.acs.api.Output
 import se.dirac.acs.api.OutputSettings
+import se.dirac.acs.api.Parameter
 import se.dirac.acs.api.Usecase
+import se.dirac.acs.api.UsecaseItem
 import java.util.EnumSet
 
 private const val TAG: String = "Client"
@@ -51,34 +53,40 @@ private fun savePreset(name: String) {
 		put("filterEnabled", currentSettings.filterEnabled)
 		put("sfxEnabled", currentSettings.sfxEnabled)
 		put("eqEnabled", currentSettings.eqEnabled)
-		put("band0", currentSettings.eqBands[0])
-		put("band1", currentSettings.eqBands[1])
-		put("band2", currentSettings.eqBands[2])
-		put("band3", currentSettings.eqBands[3])
-		put("band4", currentSettings.eqBands[4])
-		put("band5", currentSettings.eqBands[5])
-		put("band6", currentSettings.eqBands[6])
+		put("bands", currentSettings.eqBands.joinToString(";"))
+		put("stereoWidth", currentSettings.stereoWidth)
+		put("tonalBalance", currentSettings.tonalBalance)
+		put("loudness", currentSettings.loudness)
 	}
 	db.update("presets", values, "name=?", arrayOf(name))
 }
 
+// Load current output db entry and apply it
 fun applyUpdatedSettings() {
 	val bound = BOUND ?: return
 
 	val internal = !HeadsetReceiver.PLUGGED && BluetoothReceiver.BLUETOOTH_ACTIVE == null
 	val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
 		?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
-
 	val bundle = Bundle()
-	if (!bound.setOutput2(loadPreset(presetName, internal, presetName != "headphones" && presetName != "internal"), bundle))
-		Log.w(TAG, "Service rejected preset '$presetName'")
+	val preset = loadPreset(presetName, internal, presetName != "headphones" && presetName != "internal")
+
+	if (!bound.setOutput2(preset, bundle) ||
+		!bound.setParameter(preset.filter.usecase, Parameter.STEREO_WIDTH_ID, preset.stereoWidth, bundle) ||
+		!bound.setParameter(preset.filter.usecase, Parameter.TONAL_BALANCE_ID, preset.tonalBalance, bundle) ||
+		!bound.setParameter(preset.filter.usecase, Parameter.LOUDNESS_ID, preset.loudness, bundle)
+	) { Log.w(TAG, "Service rejected preset '$presetName'") }
 	toastError(bundle)
 }
 
 fun updateSettings(newSettings: OutputSettings): Boolean {
 	val bundle = Bundle()
 	val bound = BOUND ?: return false
-	if (!bound.setOutput2(newSettings, bundle)) return false
+	if (!bound.setOutput2(newSettings, bundle) ||
+		!bound.setParameter(newSettings.filter.usecase, Parameter.STEREO_WIDTH_ID, newSettings.stereoWidth, bundle) ||
+		!bound.setParameter(newSettings.filter.usecase, Parameter.TONAL_BALANCE_ID, newSettings.tonalBalance, bundle) ||
+		!bound.setParameter(newSettings.filter.usecase, Parameter.LOUDNESS_ID, newSettings.loudness, bundle)
+	) return false
 
 	val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
 		?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
@@ -94,8 +102,22 @@ private val CONNECTION = object: ServiceConnection {
         BOUND = bind
 		Log.i(TAG, "Service bound! Applying settings")
 
-		// Initialize devices and filters
 		val instance = App.getInstance()
+
+		// Usecases
+		instance.internalUsecases.clear()
+		instance.externalUsecases.clear()
+		val bundle1 = Bundle()
+		val internalUsecases = bind.listUsecases(Output.INTERNAL, bundle1)
+		val externalUsecases = bind.listUsecases(Output.EXTERNAL, bundle1)
+		toastError(bundle1)
+
+		for (internal in internalUsecases)
+			instance.internalUsecases[internal.id] = internal
+		for (external in externalUsecases)
+			instance.externalUsecases[external.id] = external
+
+		// Initialize devices and filters
 		instance.devices.clear()
 		instance.filters.clear()
 
@@ -107,6 +129,9 @@ private val CONNECTION = object: ServiceConnection {
 		for (device in devices) {
             instance.devices[device.id] = device
             for (filter in device.filters) {
+				if (filter.usecase.getOutput() == Output.INTERNAL)
+					filter.usecase = internalUsecases[filter.usecase.id]
+				else filter.usecase = externalUsecases[filter.usecase.id]
                 instance.filters[filter.id] = filter
             }
 		}
@@ -114,23 +139,13 @@ private val CONNECTION = object: ServiceConnection {
             instance.devices[device.id] = device
 			Device.INTERNAL_DEVICE = device
             for (filter in device.filters) {
+				if (filter.usecase.getOutput() == Output.INTERNAL)
+					filter.usecase = internalUsecases[filter.usecase.id]
+				else filter.usecase = externalUsecases[filter.usecase.id]
                 instance.filters[filter.id] = filter
 				Filter.INTERNAL_FILTER = filter
             }
 		}
-
-		// Usecases
-		instance.internalUsecases.clear()
-		instance.externalUsecases.clear()
-		val bundle1 = Bundle()
-		val internalUsecases = bind.listUsecases(Output.INTERNAL, bundle1)
-		val externalUsecases = bind.listUsecases(Output.EXTERNAL, bundle1)
-		toastError(bundle)
-
-		for (internal in internalUsecases)
-			instance.internalUsecases[internal.id] = internal
-		for (external in externalUsecases)
-			instance.externalUsecases[external.id] = external
 
 		applyUpdatedSettings()
     }

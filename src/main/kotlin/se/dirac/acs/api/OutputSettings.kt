@@ -28,6 +28,7 @@ class OutputSettings : Parcelable {
 	// To update these you need bind.setParameter(PARAM_STEREO_WIDTH, value)
 	var stereoWidth: Float = 0.0f
 	var tonalBalance: Float = 0.0f
+	var loudness: Float = 0.0f
 
 	constructor(device: Device, filter: Filter) {
 		this.device = device
@@ -69,14 +70,11 @@ class OutputSettings : Parcelable {
 		enabled = c.getInt(c.getColumnIndex("enabled")) != 0
 		filterEnabled = c.getInt(c.getColumnIndex("filterEnabled")) != 0
 		sfxEnabled = filter.sfxAvailable && c.getInt(c.getColumnIndex("sfxEnabled")) != 0
-		eqEnabled = filter.eqAvailable && c.getInt(c.getColumnIndex("eqEnabled")) != 0
-		eqBands[0] = c.getFloat(c.getColumnIndex("band0"))
-		eqBands[1] = c.getFloat(c.getColumnIndex("band1"))
-		eqBands[2] = c.getFloat(c.getColumnIndex("band2"))
-		eqBands[3] = c.getFloat(c.getColumnIndex("band3"))
-		eqBands[4] = c.getFloat(c.getColumnIndex("band4"))
-		eqBands[5] = c.getFloat(c.getColumnIndex("band5"))
-		eqBands[6] = c.getFloat(c.getColumnIndex("band6"))
+		eqEnabled = filter.bandCount > 0 && c.getInt(c.getColumnIndex("eqEnabled")) != 0
+		eqBands = c.getString(c.getColumnIndex("bands")).split(';').map { v: String -> v.toFloat() }.toFloatArray()
+		stereoWidth = c.getFloat(c.getColumnIndex("stereoWidth"))
+		tonalBalance = c.getFloat(c.getColumnIndex("tonalBalance"))
+		loudness = c.getFloat(c.getColumnIndex("loudness"))
 	}
 
 	override fun describeContents(): Int {

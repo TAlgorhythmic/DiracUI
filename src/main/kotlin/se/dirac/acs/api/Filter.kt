@@ -12,24 +12,33 @@ class Filter : Parcelable {
 			id = -1, // Arbitrary id
 			name = "Nothing",
 			vendor = "Nobody",
-			Usecase.INTERNAL_POWERSOUND,
+            UsecaseItem(0, "Something"),
 			sfxAvailable = true,
-			eqAvailable = true,
 			licence = 3,
-			productId = "NO_ID"
+			productId = "NO_ID",
+			bandCount = 10
 		)
 
 		fun filterFromParcel(parcel: Parcel): Filter {
 			try {
+				val id = parcel.readLong()
+				val name = parcel.readString()
+				val vendor = parcel.readString()
+				val usecase = parcel.readParcelable(UsecaseItem::class.java.classLoader, UsecaseItem::class.java)
+					?: throw BadParcelableException("No valid usecase in parcel")
+				val sfxAvailable = parcel.readByte() != 0.toByte()
+				val bandCount = parcel.readInt()
+				val licence = parcel.readInt()
+				val productID = parcel.readString()
 				return Filter(
-					parcel.readLong(),
-					requireNotNull(parcel.readString()),
-					requireNotNull(parcel.readString()),
-					Usecase.fromInt(parcel.readInt()),
-					parcel.readByte() != 0.toByte(),
-					parcel.readByte() != 0.toByte(),
-					parcel.readInt(),
-					requireNotNull(parcel.readString()),
+					id, 
+					requireNotNull(name),
+					requireNotNull(vendor),
+					usecase,
+					sfxAvailable,
+					bandCount,
+					licence,
+					requireNotNull(productID),
 				)
 			} catch (e: BadParcelableException) {
 				throw e
@@ -39,9 +48,8 @@ class Filter : Parcelable {
 		}
 	}
     val id: Long
-	val usecase: Usecase
+	var usecase: UsecaseItem
     val sfxAvailable: Boolean
-    val eqAvailable: Boolean
     val vendor: String
     val license: Int
     val productID: String
@@ -52,22 +60,20 @@ class Filter : Parcelable {
 		id: Long,
 		name: String,
 		vendor: String,
-		usecase: Usecase,
+		usecase: UsecaseItem,
 		sfxAvailable: Boolean,
-		eqAvailable: Boolean,
+		bandCount: Int,
 		licence: Int,
-		productId: String,
-		bandCount: Int
+		productId: String
 	) {
         this.id = id
         this.name = name
         this.vendor = vendor
         this.usecase = usecase
         this.sfxAvailable = sfxAvailable
-        this.eqAvailable = eqAvailable
+		this.bandCount = bandCount
         this.license = licence
         this.productID = productId
-		this.bandCount = bandCount
     }
 
     override fun describeContents(): Int {
@@ -82,9 +88,9 @@ class Filter : Parcelable {
         parcel.writeLong(this.id)
         parcel.writeString(this.name)
         parcel.writeString(this.vendor)
-        parcel.writeInt(this.usecase.value)
-        parcel.writeByte(if (this.sfxAvailable) 1 else 0)
-        parcel.writeByte(if (this.eqAvailable) 1 else 0)
+        parcel.writeParcelable(this.usecase, i)
+        parcel.writeByte(if (this.sfxAvailable) 1.toByte() else 0.toByte())
+        parcel.writeInt(this.bandCount)
         parcel.writeInt(this.license)
         parcel.writeString(this.productID)
     }

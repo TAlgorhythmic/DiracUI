@@ -15,13 +15,10 @@ class DbHelper(ctx: Context) : SQLiteOpenHelper(ctx, NAME, null, VERSION) {
 			filterEnabled INTEGER NOT NULL DEFAULT 0,
 			sfxEnabled INTEGER NOT NULL DEFAULT 0,
 			eqEnabled INTEGER NOT NULL DEFAULT 0,
-			band0 REAL NOT NULL DEFAULT 0.0,
-			band1 REAL NOT NULL DEFAULT 0.0,
-			band2 REAL NOT NULL DEFAULT 0.0,
-			band3 REAL NOT NULL DEFAULT 0.0,
-			band4 REAL NOT NULL DEFAULT 0.0,
-			band5 REAL NOT NULL DEFAULT 0.0,
-			band6 REAL NOT NULL DEFAULT 0.0,
+			bands TEXT NOT NULL DEFAULT '',
+			stereoWidth REAL NOT NULL DEFAULT 0.0,
+			tonalBalance REAL NOT NULL DEFAULT 0.0,
+			loudness REAL NOT NULL DEFAULT 0.0,
 			device INTEGER NOT NULL DEFAULT -1,
 			filter INTEGER NOT NULL DEFAULT -1
 		)""")
