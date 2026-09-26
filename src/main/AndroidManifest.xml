@@ -10,6 +10,7 @@
 	</queries>
 	<application
 		android:name=".App"
+		android:icon="@mipmap/ic_launcher"
 		android:persistent="true"
 		android:directBootAware="true"
 		android:defaultToDeviceProtectedStorage="true"
