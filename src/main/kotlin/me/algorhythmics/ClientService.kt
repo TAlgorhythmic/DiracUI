@@ -47,7 +47,6 @@ private fun loadPreset(name: String, internal: Boolean, insertIfNotPresent: Bool
 private fun savePreset(name: String) {
 	val db = App.getInstance().database.writableDatabase
 	val values = ContentValues().apply {
-		put("filter", currentSettings.filter.id)
 		put("device", currentSettings.device.id)
 		put("enabled", currentSettings.enabled)
 		put("filterEnabled", currentSettings.filterEnabled)
@@ -57,6 +56,7 @@ private fun savePreset(name: String) {
 		put("stereoWidth", currentSettings.stereoWidth)
 		put("tonalBalance", currentSettings.tonalBalance)
 		put("loudness", currentSettings.loudness)
+		put("usecase", currentSettings.filter.usecase.id)
 	}
 	db.update("presets", values, "name=?", arrayOf(name))
 }
@@ -152,7 +152,8 @@ private val CONNECTION = object: ServiceConnection {
 
     override fun onServiceDisconnected(p0: ComponentName) {
         BOUND = null
-		Log.i(TAG, "Service disconnected")
+		Log.i(TAG, "Service disconnected, Reconnecting")
+		bindService(App.getInstance())
     }
 
     override fun onNullBinding(name: ComponentName?) {
@@ -162,8 +163,9 @@ private val CONNECTION = object: ServiceConnection {
 
     override fun onBindingDied(name: ComponentName?) {
         super.onBindingDied(name)
-		Log.w(TAG, "Bound service died for some reason?")
+		Log.w(TAG, "Bound service died for some reason? Reconnecting")
 		BOUND = null
+		bindService(App.getInstance())
     }
 }
 

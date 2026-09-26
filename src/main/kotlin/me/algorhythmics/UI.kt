@@ -2,8 +2,10 @@ package me.algorhythmics
 
 import android.content.Context
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.SeekBar
@@ -83,7 +85,18 @@ class EqBands(ctx: Context, bandCount: Int, private val onBandChange: (index: In
 }
 
 private fun switcher(ctx: MainActivity, name: String, callback: (Boolean) -> Unit): Switch {
-	
+	return Switch(ctx).apply {
+		showText = false
+		layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+		)
+		text = name
+		setOnCheckedChangeListener {_: CompoundButton, newVal: Boolean ->
+			isEnabled = false
+			callback(newVal)
+		}
+	}
 }
 
 fun toast(msg: String) {
@@ -96,7 +109,7 @@ fun toastError(status: Bundle) {
 		val clazz = status.getString(Keys.CAUSE_CLASS)
 		val message = status.getString(Keys.CAUSE_MESSAGE)
 		val msg = "$clazz: $message"
-        Log.e("RemoteError", msg)
+        Log.e("ServiceError", msg)
 		toast(msg)
 	}
 }
@@ -106,11 +119,25 @@ fun composeUi(): UiElements {
 		?: throw IllegalStateException("App is not running, this shouldn't be called without a context")
 
 	val view = ScrollView(ui)
-	val diracEnabled = switcher(ui, "Dirac HD") { newValue: Boolean -> BOUND. }
-	val diracEnabled = switcher(ui, "Dirac HD") { newValue: Boolean -> ctx.onDiracChange(newValue) }
-	val diracEnabled = switcher(ui, "Dirac HD") { newValue: Boolean -> ctx.onDiracChange(newValue) }
-	val diracEnabled = switcher(ui, "Dirac HD") { newValue: Boolean -> ctx.onDiracChange(newValue) }
-	val diracEnabled = switcher(ui, "Dirac HD") { newValue: Boolean -> ctx.onDiracChange(newValue) }
+
+	// Switches
+	val	diracEnabled = switcher(ui, "Dirac HD") {newValue: Boolean ->
+		currentSettings.enabled = newValue
+		updateSettings(currentSettings)
+	}
+	val filterEnabled = switcher(ui, "Enable Filter") {newValue: Boolean ->
+		currentSettings.filterEnabled = newValue
+		updateSettings(currentSettings)
+	}
+	val sfxEnabled = switcher(ui, "Enable SFX") {newValue: Boolean ->
+		currentSettings.sfxEnabled = newValue
+		updateSettings(currentSettings)
+	}
+	val eqEnabled = switcher(ui, "Enable Equalizer") { newValue: Boolean ->
+		currentSettings.eqEnabled = newValue
+		updateSettings(currentSettings)
+	}
+
 
 	return view
 }
