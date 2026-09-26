@@ -18,7 +18,7 @@ interface IAudioControlService {
 
 	/** Fetch a device name and optional tech types (e.g. eq, sfx, etc) from a hardcoded
 	* `diracvdd.bin` file that I guess gets shipped with a stock rom.
-	* The diracvdd.bin i from oppo has only 1 entry, probably worth using
+	* The diracvdd.bin i got from oppo has only 1 entry, probably worth using
 	*
 	* @param locale Device name can be translated, it fallbacks to "en" so just pass "en" to avoid having to try something that doesnt exist
 	*/
@@ -33,7 +33,7 @@ interface IAudioControlService {
 	* Lists all devices from a specific output
 	*
 	* @param locale just pass "en".
-	* @param output either INTERNAL or EXTERNAL. INTERNAL will likely return a singleton with the speaker, EXTERNAL will actually fetch the list of devices in the database
+	* @param output either INTERNAL or EXTERNAL. INTERNAL will likely return a singleton with the speaker, EXTERNAL will actually fetch the list of devices in the database (provided by diracvdd.bin)
 	*/
 	List<Device> listDevices(String locale, in Output output);
 
@@ -44,8 +44,8 @@ interface IAudioControlService {
 	byte[] getDeviceVendorData(long id);
 
 	/**
-	* Change the output profile settings,
-	* useful for when the user plugs headphones or connects to bluetooth.
+	* Change the output settings.
+	* This is the main route of changing audio settings, since most of them live in OutputSettings
 	*
 	* @return whether it was applied or not
 	*/
@@ -58,7 +58,7 @@ interface IAudioControlService {
 
 	/**
 	* Delete a device.
-	* Not sure why you would do that since dirac servers are long dead but there it is.
+	* This creates a bug on the service, dont call it.
 	*/
 	boolean deleteDevice(long id);
 
@@ -99,7 +99,7 @@ interface IAudioControlService {
 	/**
 	* These are basically the same as above but they account for safe mode,
 	* To avoid unknown errors, probably worth using
-	* You pass new Bundle(), and after executing 
+	* You pass new Bundle(), and after executing it will be filled with errors if any
 	*/
 	Device getDevice2(long id, String locale, out Bundle status);
 	Device getDeviceByProductId2(String productId, String locale, out Bundle status);
@@ -128,6 +128,7 @@ interface IAudioControlService {
 	* Known ids:
 	*   STEREO_WIDTH_ID = 2
 	*   TONAL_BALANCE_ID = 3
+	*   LOUDNESS_ID = 4
 	*
 	* @param item addressing only; in practice just its Output
 	*/
@@ -137,6 +138,11 @@ interface IAudioControlService {
 
 	List<Parameter> listParameters(in UsecaseItem item, out Bundle status);
 	boolean setDiracEnabled(boolean enabled, out Bundle status);
+
+	/**
+	* This likely only sets INTERNAL_POWERSOUND to INTERNAL_POWERSOUND_GAME and same with external.
+	* Unused, you can set game mode by changing filter usecase and using setOutput
+	*/
 	boolean setGameModeEnabled(boolean enabled, out Bundle status);
 	boolean isGameModeEnabled();
 	boolean hasAlternativeTuningInternal();
