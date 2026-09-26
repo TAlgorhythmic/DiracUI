@@ -8,7 +8,12 @@ import me.algorhythmics.App
 
 class OutputSettings : Parcelable {
 	companion object {
+		@JvmField
 		val CREATOR: Parcelable.Creator<OutputSettings> = OutputSettingsCreator()
+
+		const val PARAM_STEREO_WIDTH = 2
+		const val PARAM_TONAL_BALANCE = 3
+		const val LOUDNESS = 4
 	}
 
 	var enabled: Boolean = false
@@ -18,6 +23,11 @@ class OutputSettings : Parcelable {
 	var eqBands: FloatArray = FloatArray(7)
 	var device: Device = Device.INTERNAL_DEVICE
 	var filter: Filter = Filter.INTERNAL_FILTER
+
+	// These two are not included in the parcel, just stored as a state
+	// To update these you need bind.setParameter(PARAM_STEREO_WIDTH, value)
+	var stereoWidth: Float = 0.0f
+	var tonalBalance: Float = 0.0f
 
 	constructor(device: Device, filter: Filter) {
 		this.device = device

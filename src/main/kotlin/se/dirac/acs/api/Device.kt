@@ -6,7 +6,9 @@ import android.os.Parcelable
 
 class Device : Parcelable {
 	companion object {
+		@JvmField
 		val CREATOR: Parcelable.Creator<Device> = DeviceCreator()
+
 		var INTERNAL_DEVICE: Device = Device(
 			id = -1, // device -1 means no device
 			name = "Nothing",

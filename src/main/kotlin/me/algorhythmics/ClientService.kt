@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.database.sqlite.SQLiteDatabase
+import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import se.dirac.acs.api.Device
@@ -21,8 +22,6 @@ private const val TAG: String = "Client"
 private val INTENT: Intent = Intent().setClassName("se.dirac.acs", "se.dirac.acs.AudioControlService")
 
 @Volatile
-var STARTED: Boolean = false
-@Volatile
 var BOUND: IAudioControlService? = null
 
 // Config state
@@ -31,18 +30,36 @@ var currentSettings: OutputSettings = OutputSettings(Device.INTERNAL_DEVICE, Fil
 @Volatile
 var currentOutput: Output = Output.INTERNAL
 
-private val INTERNAL_USECASES: EnumSet<Usecase> = EnumSet.of(Usecase.INTERNAL_PANORAMA, Usecase.INTERNAL_POWERSOUND)
-private val EXTERNAL_USECASES: EnumSet<Usecase> = EnumSet.of(Usecase.EXTERNAL_HEADSET, Usecase.EXTERNAL_MRC)
-
-private fun loadPreset(name: String, internal: Boolean): OutputSettings {
+private fun loadPreset(name: String, internal: Boolean, insertIfNotPresent: Boolean): OutputSettings {
 	val db = App.getInstance().database.writableDatabase
 	val values = ContentValues().apply { put("name", name) }
-	db.insertWithOnConflict("presets", null, values, SQLiteDatabase.CONFLICT_IGNORE)
+
+	if (insertIfNotPresent) db.insertWithOnConflict("presets", null, values, SQLiteDatabase.CONFLICT_IGNORE)
 
 	return db.query("presets", null, "name=?", arrayOf(name), null, null, null).use { cursor ->
 		cursor.moveToFirst()
 		OutputSettings(cursor).apply { if (internal) device.id = -1 }
 	}
+}
+
+private fun savePreset(name: String) {
+	val db = App.getInstance().database.writableDatabase
+	val values = ContentValues().apply {
+		put("filter", currentSettings.filter.id)
+		put("device", currentSettings.device.id)
+		put("enabled", currentSettings.enabled)
+		put("filterEnabled", currentSettings.filterEnabled)
+		put("sfxEnabled", currentSettings.sfxEnabled)
+		put("eqEnabled", currentSettings.eqEnabled)
+		put("band0", currentSettings.eqBands[0])
+		put("band1", currentSettings.eqBands[1])
+		put("band2", currentSettings.eqBands[2])
+		put("band3", currentSettings.eqBands[3])
+		put("band4", currentSettings.eqBands[4])
+		put("band5", currentSettings.eqBands[5])
+		put("band6", currentSettings.eqBands[6])
+	}
+	db.update("presets", values, "name=?", arrayOf(name))
 }
 
 fun applyUpdatedSettings() {
@@ -52,9 +69,23 @@ fun applyUpdatedSettings() {
 	val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
 		?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
 
-	if (!bound.setOutput(loadPreset(presetName, internal))) {
+	val bundle = Bundle()
+	if (!bound.setOutput2(loadPreset(presetName, internal, presetName != "headphones" && presetName != "internal"), bundle))
 		Log.w(TAG, "Service rejected preset '$presetName'")
-	}
+	toastError(bundle)
+}
+
+fun updateSettings(newSettings: OutputSettings): Boolean {
+	val bundle = Bundle()
+	val bound = BOUND ?: return false
+	if (!bound.setOutput2(newSettings, bundle)) return false
+
+	val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
+		?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
+	savePreset(presetName)
+	toastError(bundle) // Notice if remote error
+
+	return true
 }
 
 private val CONNECTION = object: ServiceConnection {
@@ -68,8 +99,10 @@ private val CONNECTION = object: ServiceConnection {
 		instance.devices.clear()
 		instance.filters.clear()
 
-		val devices = bind.listDevices("en", Output.EXTERNAL)
-		val internalDevices = bind.listDevices("en", Output.INTERNAL)
+		val bundle = Bundle()
+		val devices = bind.listDevices2("en", Output.EXTERNAL, bundle)
+		val internalDevices = bind.listDevices2("en", Output.INTERNAL, bundle)
+		toastError(bundle)
 
 		for (device in devices) {
             instance.devices[device.id] = device
@@ -85,6 +118,19 @@ private val CONNECTION = object: ServiceConnection {
 				Filter.INTERNAL_FILTER = filter
             }
 		}
+
+		// Usecases
+		instance.internalUsecases.clear()
+		instance.externalUsecases.clear()
+		val bundle1 = Bundle()
+		val internalUsecases = bind.listUsecases(Output.INTERNAL, bundle1)
+		val externalUsecases = bind.listUsecases(Output.EXTERNAL, bundle1)
+		toastError(bundle)
+
+		for (internal in internalUsecases)
+			instance.internalUsecases[internal.id] = internal
+		for (external in externalUsecases)
+			instance.externalUsecases[external.id] = external
 
 		applyUpdatedSettings()
     }

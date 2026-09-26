@@ -23,6 +23,7 @@ class MainActivity : Activity() {
 	private lateinit var filterEnabled: Switch
 	private lateinit var sfxEnabled: Switch
 	private lateinit var eqEnabled: Switch
+	private lateinit var bands: Array<>
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)

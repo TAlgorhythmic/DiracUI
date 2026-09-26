@@ -6,6 +6,7 @@ import android.os.Parcelable
 
 class Filter : Parcelable {
 	companion object {
+		@JvmField
 		val CREATOR: Parcelable.Creator<Filter> = FilterCreator()
 		var INTERNAL_FILTER: Filter = Filter(
 			id = -1, // Arbitrary id
@@ -45,6 +46,7 @@ class Filter : Parcelable {
     val license: Int
     val productID: String
     val name: String
+	val bandCount: Int
 
 	constructor(
 		id: Long,
@@ -54,7 +56,8 @@ class Filter : Parcelable {
 		sfxAvailable: Boolean,
 		eqAvailable: Boolean,
 		licence: Int,
-		productId: String
+		productId: String,
+		bandCount: Int
 	) {
         this.id = id
         this.name = name
@@ -64,6 +67,7 @@ class Filter : Parcelable {
         this.eqAvailable = eqAvailable
         this.license = licence
         this.productID = productId
+		this.bandCount = bandCount
     }
 
     override fun describeContents(): Int {

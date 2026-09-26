@@ -4,9 +4,9 @@ import java.util.Arrays
 
 enum class Usecase(val value: Int) {
 	INTERNAL_POWERSOUND(1),
-	INTERNAL_PANORAMA(2),
 	EXTERNAL_HEADSET(3),
-	EXTERNAL_MRC(4);
+	INTERNAL_POWERSOUND_GAME(10),
+	EXTERNAL_HEADSET_GAME(13);
 
 	companion object {
 		fun fromInt(i: Int): Usecase {

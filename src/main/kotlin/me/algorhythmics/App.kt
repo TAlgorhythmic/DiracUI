@@ -11,6 +11,7 @@ import android.media.AudioManager
 import android.os.Build
 import se.dirac.acs.api.Device
 import se.dirac.acs.api.Filter
+import se.dirac.acs.api.UsecaseItem
 
 class App : Application() {
 	companion object {
@@ -23,6 +24,8 @@ class App : Application() {
 
 	val devices: HashMap<Long, Device> = HashMap()
 	val filters: HashMap<Long, Filter> = HashMap()
+	val internalUsecases: HashMap<Int, UsecaseItem> = HashMap()
+	val externalUsecases: HashMap<Int, UsecaseItem> = HashMap()
 
 	lateinit var database: DbHelper
 

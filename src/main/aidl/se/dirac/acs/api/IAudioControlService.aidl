@@ -1,8 +1,12 @@
 package se.dirac.acs.api;
 
+import android.os.Bundle;
+
 import se.dirac.acs.api.Device;
 import se.dirac.acs.api.Output;
 import se.dirac.acs.api.OutputSettings;
+import se.dirac.acs.api.UsecaseItem;
+import se.dirac.acs.api.Parameter;
 import se.dirac.acs.api.IAudioControlServiceCallback;
 
 /**
@@ -91,4 +95,52 @@ interface IAudioControlService {
 	* Unused.
 	*/
 	String getInstallationId();
+
+	/**
+	* These are basically the same as above but they account for safe mode,
+	* To avoid unknown errors, probably worth using
+	* You pass new Bundle(), and after executing 
+	*/
+	Device getDevice2(long id, String locale, out Bundle status);
+	Device getDeviceByProductId2(String productId, String locale, out Bundle status);
+	List<Device> listDevices2(String locale, in Output output, out Bundle status);
+	byte[] getDeviceVendorData2(long id, out Bundle status);
+	boolean setOutput2(in OutputSettings output, out Bundle status);
+	void setDisabled2(in Output output, out Bundle status);
+	boolean deleteDevice2(long id, out Bundle status);
+	OutputSettings getCurrentOutputSettings2(in Output output, out Bundle status);
+	boolean userHasLicence2(String user, out Bundle status);
+	int requestSync2(out Bundle status);
+	String getUser2(out Bundle status);
+	boolean setUser2(String str, String str1, out Bundle status);
+	int getCurrentRouting2(out Bundle status);
+	void registerCallback2(IAudioControlServiceCallback callback, out Bundle status);
+	void unregisterCallback2(IAudioControlServiceCallback callback, out Bundle status);
+	String getInstallationId2(out Bundle status);
+
+	boolean isSafeMode();
+	void killServer();
+
+	/**
+	* Sets one individual DSP parameter to a value. This is not part of OutputSettings,
+	* so it's the only way to set stereo width and tonal balance.
+	*
+	* Known ids:
+	*   STEREO_WIDTH_ID = 2
+	*   TONAL_BALANCE_ID = 3
+	*
+	* @param item addressing only; in practice just its Output
+	*/
+	boolean setParameter(in UsecaseItem item, int paramId, float value, out Bundle status);
+
+	float getParameter(in UsecaseItem item, int i, out Bundle status);
+
+	List<Parameter> listParameters(in UsecaseItem item, out Bundle status);
+	boolean setDiracEnabled(boolean enabled, out Bundle status);
+	boolean setGameModeEnabled(boolean enabled, out Bundle status);
+	boolean isGameModeEnabled();
+	boolean hasAlternativeTuningInternal();
+	boolean hasAlternativeTuningExternal();
+	OutputSettings getOutputSettings(in UsecaseItem item, long id, out Bundle status);
+	List<UsecaseItem> listUsecases(in Output output, out Bundle status);
 }

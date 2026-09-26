@@ -23,16 +23,15 @@ class BluetoothReceiver : BroadcastReceiver() {
 				val name = device.describe()
 				BLUETOOTH_ACTIVE = name
 
-				Log.i(TAG, "connected: $name")
+				Log.i(TAG, "connected: $name, trying to apply changes")
 
-				DiracService.publish(IDiracService.DEVICE_BLUETOOTH, name)
+				applyUpdatedSettings()
 			}
 
 			BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
 				Log.i(TAG, "disconnected: ${device.describe()}")
 
 				BLUETOOTH_ACTIVE = null
-				DiracService.publish(IDiracService.DEVICE_NONE, null)
 			}
 		}
 	}
