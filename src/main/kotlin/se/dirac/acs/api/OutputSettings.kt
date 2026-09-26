@@ -4,7 +4,7 @@ import android.database.Cursor
 import android.os.BadParcelableException
 import android.os.Parcel
 import android.os.Parcelable
-import me.algorhythmics.App
+import me.algorhythmics.diracui.App
 
 class OutputSettings : Parcelable {
 	companion object {

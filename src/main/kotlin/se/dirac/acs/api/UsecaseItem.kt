@@ -3,7 +3,7 @@ package se.dirac.acs.api
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
-import me.algorhythmics.toast
+import me.algorhythmics.diracui.toast
 
 class UsecaseItem : Parcelable {
 	val id: Int

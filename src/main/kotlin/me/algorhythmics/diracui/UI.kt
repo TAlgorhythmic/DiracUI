@@ -1,4 +1,4 @@
-package me.algorhythmics
+package me.algorhythmics.diracui
 
 import android.content.Context
 import android.os.Bundle

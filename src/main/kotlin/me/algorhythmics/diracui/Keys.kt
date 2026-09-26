@@ -1,4 +1,4 @@
-package me.algorhythmics
+package me.algorhythmics.diracui
 
 class Keys {
 	companion object {

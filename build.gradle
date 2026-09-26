@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace 'me.algorhythmics'
+    namespace 'me.algorhythmics.diracui'
 
     compileSdk 37
 
     defaultConfig {
-        applicationId 'me.algorhythmics'
+        applicationId 'me.algorhythmics.diracui'
         minSdk 23
         targetSdk 37
         versionCode 1
@@ -18,6 +18,12 @@ android {
     buildFeatures {
         aidl true
     }
+
+	splits {
+		abi {
+			enable true
+		}
+	}
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21
