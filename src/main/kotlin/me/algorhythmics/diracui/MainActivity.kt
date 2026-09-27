@@ -22,10 +22,12 @@ class MainActivity : Activity() {
 	private lateinit var elements: UiElements
 
 	override fun onCreate(savedInstanceState: Bundle?) {
+		setTheme(android.R.style.Theme_DeviceDefault_DayNight)
 		super.onCreate(savedInstanceState)
+		activeUi = this
 
 		// Init UI handles
-		elements = composeUi()
+		elements = composeUi(this)
 		setContentView(elements.view)
 
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return

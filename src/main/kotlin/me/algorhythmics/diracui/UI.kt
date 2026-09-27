@@ -1,6 +1,7 @@
 package me.algorhythmics.diracui
 
 import android.content.Context
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.AttributeSet
 import android.util.Log
@@ -17,6 +18,9 @@ import android.widget.TextView
 import android.widget.Toast
 import se.dirac.acs.api.Device
 import se.dirac.acs.api.UsecaseItem
+
+// Converts dp to pixels for this screen
+fun Context.dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
 data class UiElements (
     val diracEnabled: Switch,
@@ -118,7 +122,9 @@ class Selector<T>(
 
 	fun update(items: List<T>, selected: T? = this.selected) {
 		this.items = items
-		adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, items.map(label)).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+		adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, items.map(label)).apply {
+			setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+		}
 		val index = items.indexOf(selected).coerceAtLeast(0)
 		this.selected = items.getOrNull(index)
 		setSelection(index)
@@ -134,6 +140,7 @@ private fun switcher(ctx: MainActivity, name: String, callback: (Boolean) -> Uni
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
 		)
+//		textSize = 18f
 		text = name
 		setOnCheckedChangeListener {_: CompoundButton, newVal: Boolean ->
 			if (!updating) {
@@ -174,10 +181,7 @@ fun toastError(status: Bundle) {
 	}
 }
 
-fun composeUi(): UiElements {
-	val ui = MainActivity.getActiveUi()
-		?: throw IllegalStateException("App is not running, this shouldn't be called without a context")
-
+fun composeUi(ui: MainActivity): UiElements {
 	// Switches
 	val	diracEnabled = switcher(ui, "Dirac HD") {newValue: Boolean ->
 		currentSettings.enabled = newValue
@@ -225,7 +229,11 @@ fun composeUi(): UiElements {
 		updateSettings(currentSettings)
 	}
 
-	val content = LinearLayout(ui).apply { orientation = LinearLayout.VERTICAL }
+	val content = LinearLayout(ui).apply {
+		orientation = LinearLayout.VERTICAL
+		dividerDrawable = GradientDrawable().apply { setSize(0, ui.dp(12)) }
+		showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE
+	}
 
 	// Append all components
 	content.addView(diracEnabled)
@@ -242,7 +250,12 @@ fun composeUi(): UiElements {
 	content.addView(loudnessTitle)
 	content.addView(loudness)
 
-	val view = ScrollView(ui).apply { addView(content) }
+	val view = ScrollView(ui).apply {
+		fitsSystemWindows = true
+		clipToPadding = true
+		setPadding(ui.dp(16), ui.dp(16), ui.dp(16), ui.dp(16))
+		addView(content)
+	}
 
 	return UiElements(
 		diracEnabled,
