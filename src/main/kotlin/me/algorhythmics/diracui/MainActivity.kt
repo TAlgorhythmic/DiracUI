@@ -24,7 +24,6 @@ class MainActivity : Activity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		setTheme(android.R.style.Theme_DeviceDefault_DayNight)
 		super.onCreate(savedInstanceState)
-		activeUi = this
 
 		// Init UI handles
 		elements = composeUi(this)
@@ -40,6 +39,12 @@ class MainActivity : Activity() {
 	override fun onStart() {
 		super.onStart()
 		activeUi = this
+
+		// Try to bind service if unbound on ui startup
+		if (BOUND == null) {
+			bindService(App.getInstance())
+		}
+
 		updateUi()
 	}
 
