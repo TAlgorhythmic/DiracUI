@@ -18,7 +18,7 @@ DiracUI is a lightweight, modern open-source client for the **Dirac Audio Contro
 
 - Android 6.0 (API 23) or newer
 - A compatible DiracAudioControlService (`se.dirac.acs`). This app targets 6.0.19, but should work similars as well.
-- DiracAudioControlService must the AFM backend controller
+- DiracAudioControlService must have the AFM backend controller
 - This app is meant to run as a system app
 
 ## Build
