@@ -41,6 +41,8 @@ class App : Application() {
 		devices[-1] = Device.INTERNAL_DEVICE
 		filters[-1] = Filter.INTERNAL_FILTER
 
+		registerReceiver(UnlockReceiver(), IntentFilter(Intent.ACTION_USER_UNLOCKED))
+
 		// Register headset receiver
 		val headsetFilter = IntentFilter(AudioManager.ACTION_HEADSET_PLUG)
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

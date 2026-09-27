@@ -140,7 +140,7 @@ private fun switcher(ctx: MainActivity, name: String, callback: (Boolean) -> Uni
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
 		)
-//		textSize = 18f
+		textSize = 20f
 		text = name
 		setOnCheckedChangeListener {_: CompoundButton, newVal: Boolean ->
 			if (!updating) {
