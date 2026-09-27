@@ -24,7 +24,7 @@ DiracUI is a lightweight, modern open-source client for the **Dirac Audio Contro
 ## Build
 
 ```sh
-./gradlew assembleDebug
+./gradlew assembleRelease
 ```
 
 JDK 21 is needed; Gradle picks it up automatically if it's installed. The APK is written to `build/outputs/apk/debug/`.
