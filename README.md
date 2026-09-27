@@ -11,7 +11,7 @@ DiracUI is a lightweight, modern open-source client for the **Dirac Audio Contro
 - Enable or disable the filter, SFX and equalizer
 - Multi-band **equalizer** (-12 dB to +12 dB)
 - Hidden **Stereo width**, **tonal balance** and **loudness** controls
-- Separate presets for the internal speaker and headphones
+- Separate presets for the internal speaker, headphones and bluetooth devices
 - Switches presets when wired or Bluetooth headphones connect
 
 ## Requirements
