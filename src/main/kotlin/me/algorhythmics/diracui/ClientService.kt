@@ -36,7 +36,8 @@ private fun loadPreset(name: String, internal: Boolean, insertIfNotPresent: Bool
 	val db = App.getInstance().database.writableDatabase
 	val values = ContentValues().apply {
 		put("name", name)
-		put("device", 1)
+		if (!internal)
+			put("device", 1)
 	}
 
 	if (insertIfNotPresent) db.insertWithOnConflict("presets", null, values, SQLiteDatabase.CONFLICT_IGNORE)
@@ -74,6 +75,8 @@ fun applyUpdatedSettings() {
 			?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
 		val bundle = Bundle()
 		val preset = loadPreset(presetName, internal, presetName != "headphones" && presetName != "internal")
+		if (preset.eqBands.isEmpty())
+			preset.eqBands = FloatArray(10) {0.0f}
 
 		if (!bound.setOutput2(preset, bundle) ||
 			!bound.setParameter(preset.filter.usecase, Parameter.STEREO_WIDTH_ID, preset.stereoWidth, bundle) ||
