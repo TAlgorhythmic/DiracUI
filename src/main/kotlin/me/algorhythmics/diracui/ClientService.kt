@@ -75,8 +75,6 @@ fun applyUpdatedSettings() {
 			?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
 		val bundle = Bundle()
 		val preset = loadPreset(presetName, internal, presetName != "headphones" && presetName != "internal")
-		if (preset.eqBands.isEmpty())
-			preset.eqBands = FloatArray(10) {0.0f}
 
 		if (!bound.setOutput2(preset, bundle) ||
 			!bound.setParameter(preset.filter.usecase, Parameter.STEREO_WIDTH_ID, preset.stereoWidth, bundle) ||

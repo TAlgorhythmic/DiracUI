@@ -82,7 +82,7 @@ class OutputSettings : Parcelable {
 		sfxEnabled = filter.sfxAvailable && c.getInt(c.getColumnIndexOrThrow("sfxEnabled")) != 0
 		eqEnabled = filter.bandCount > 0 && c.getInt(c.getColumnIndexOrThrow("eqEnabled")) != 0
 		val bandsStr = c.getString(c.getColumnIndexOrThrow("bands"))
-		eqBands = if (bandsStr.isEmpty()) FloatArray(0) else bandsStr.split(';').map { v: String -> v.toFloat() }.toFloatArray()
+		eqBands = if (bandsStr.isEmpty()) FloatArray(10) else bandsStr.split(';').map { v: String -> v.toFloat() }.toFloatArray()
 		stereoWidth = c.getFloat(c.getColumnIndexOrThrow("stereoWidth"))
 		tonalBalance = c.getFloat(c.getColumnIndexOrThrow("tonalBalance"))
 		loudness = c.getFloat(c.getColumnIndexOrThrow("loudness"))
