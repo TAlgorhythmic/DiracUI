@@ -34,7 +34,10 @@ var currentOutput: Output = Output.INTERNAL
 
 private fun loadPreset(name: String, internal: Boolean, insertIfNotPresent: Boolean): OutputSettings {
 	val db = App.getInstance().database.writableDatabase
-	val values = ContentValues().apply { put("name", name) }
+	val values = ContentValues().apply {
+		put("name", name)
+		put("device", 1)
+	}
 
 	if (insertIfNotPresent) db.insertWithOnConflict("presets", null, values, SQLiteDatabase.CONFLICT_IGNORE)
 

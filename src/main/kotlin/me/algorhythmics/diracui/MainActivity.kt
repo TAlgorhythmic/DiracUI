@@ -71,7 +71,7 @@ class MainActivity : Activity() {
 		elements.loudness.progress = (25f * (currentSettings.loudness + 1f)).toInt()
 
 		val instance = App.getInstance()
-		val external = currentSettings.device.id >= 0
+		val external = BluetoothReceiver.BLUETOOTH_ACTIVE != null || HeadsetReceiver.PLUGGED
 
 		elements.device.isEnabled = external
 		if (external)

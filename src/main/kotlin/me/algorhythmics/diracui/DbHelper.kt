@@ -23,7 +23,7 @@ class DbHelper(ctx: Context) : SQLiteOpenHelper(ctx, NAME, null, VERSION) {
 			device INTEGER NOT NULL DEFAULT -1
 		)""")
 		db.execSQL("INSERT INTO presets(name) VALUES('internal')")
-		db.execSQL("INSERT INTO presets(name) VALUES('headphones')")
+		db.execSQL("INSERT INTO presets(name, device) VALUES('headphones', 1)")
     }
 
     override fun onUpgrade(p0: SQLiteDatabase, p1: Int, p2: Int) {
