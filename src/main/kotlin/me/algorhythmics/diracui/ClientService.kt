@@ -120,58 +120,67 @@ private val CONNECTION: ServiceConnection = object: ServiceConnection {
 			val externalUsecases = bind.listUsecases(Output.EXTERNAL, bundle1)
 			toastError(bundle1)
 
-			for (internal in internalUsecases)
-				instance.internalUsecases[internal.id] = internal
-			for (external in externalUsecases)
-				instance.externalUsecases[external.id] = external
+			try {
+				for (internal in internalUsecases)
+					instance.internalUsecases[internal.id] = internal
+				for (external in externalUsecases)
+					instance.externalUsecases[external.id] = external
 
-			// Initialize devices and filters
-			instance.devices.clear()
-			instance.filters.clear()
+				// Initialize devices and filters
+				instance.devices.clear()
+				instance.filters.clear()
 
-			val bundle = Bundle()
-			val devices = bind.listDevices2("en", Output.EXTERNAL, bundle)
-			val internalDevices = bind.listDevices2("en", Output.INTERNAL, bundle)
-			toastError(bundle)
+				val bundle = Bundle()
+				val devices = bind.listDevices2("en", Output.EXTERNAL, bundle)
+				val internalDevices = bind.listDevices2("en", Output.INTERNAL, bundle)
+				toastError(bundle)
 
-			for (device in devices) {
-				instance.devices[device.id] = device
-				for (filter in device.filters) {
-					if (filter.usecase.getOutput() == Output.INTERNAL)
-						filter.usecase = instance.internalUsecases[filter.usecase.id]
-							?: instance.internalUsecases[Usecase.INTERNAL_POWERSOUND.value] as UsecaseItem
-					else filter.usecase = instance.externalUsecases[filter.usecase.id]
-							?: instance.externalUsecases[Usecase.EXTERNAL_HEADSET.value] as UsecaseItem
-					instance.filters[filter.id] = filter
+				for (device in devices) {
+					instance.devices[device.id] = device
+					for (filter in device.filters) {
+						if (filter.usecase.getOutput() == Output.INTERNAL)
+							filter.usecase = instance.internalUsecases[filter.usecase.id]
+								?: internalUsecases[0]
+						else filter.usecase = instance.externalUsecases[filter.usecase.id]
+								?: externalUsecases[0]
+						instance.filters[filter.id] = filter
+					}
 				}
-			}
-			for (device in internalDevices) {
-				instance.devices[device.id] = device
-				Device.INTERNAL_DEVICE = device
-				for (filter in device.filters) {
-					if (filter.usecase.getOutput() == Output.INTERNAL)
-						filter.usecase = internalUsecases[filter.usecase.id]
-							?: instance.internalUsecases[Usecase.INTERNAL_POWERSOUND.value] as UsecaseItem
-					else filter.usecase = externalUsecases[filter.usecase.id]
-							?: instance.externalUsecases[Usecase.EXTERNAL_HEADSET.value] as UsecaseItem
-					instance.filters[filter.id] = filter
-					Filter.INTERNAL_FILTER = filter
+				for (device in internalDevices) {
+					instance.devices[device.id] = device
+					Device.INTERNAL_DEVICE = device
+					for (filter in device.filters) {
+						if (filter.usecase.getOutput() == Output.INTERNAL)
+							filter.usecase = instance.internalUsecases[filter.usecase.id]
+								?: internalUsecases[0]
+						else filter.usecase = instance.externalUsecases[filter.usecase.id]
+								?: externalUsecases[0]
+						instance.filters[filter.id] = filter
+						Filter.INTERNAL_FILTER = filter
+					}
 				}
+
+				val bundle2 = Bundle()
+				bind.registerCallback2(serviceCallback, bundle2)
+				toastError(bundle2)
+
+				applyUpdatedSettings()
+			} catch (e: Exception) {
+				Log.e(TAG, "Failed to initialize, unbinding...", e)
+				App.getInstance().unbindService(CONNECTION)
+				BOUND = null
 			}
-
-			val bundle2 = Bundle()
-			bind.registerCallback2(serviceCallback, bundle2)
-			toastError(bundle2)
-
-			applyUpdatedSettings()
 		}
 	}
 
 	override fun onServiceDisconnected(p0: ComponentName) {
+		val rebind = BOUND != null
 		BOUND = null
-		Log.i(TAG, "Service disconnected, Reconnecting")
+		Log.i(TAG, "Service disconnected")
 		App.getInstance().unbindService(CONNECTION)
-		bindService(App.getInstance())
+
+		if (rebind) 
+			bindService(App.getInstance())
 	}
 
 	override fun onNullBinding(name: ComponentName?) {
@@ -182,9 +191,12 @@ private val CONNECTION: ServiceConnection = object: ServiceConnection {
 	override fun onBindingDied(name: ComponentName?) {
         super.onBindingDied(name)
 		Log.w(TAG, "Bound service died for some reason? Reconnecting")
+		val rebind = BOUND != null
 		BOUND = null
+
 		App.getInstance().unbindService(CONNECTION)
-		bindService(App.getInstance())
+		if (rebind) 
+			bindService(App.getInstance())
     }
 }
 

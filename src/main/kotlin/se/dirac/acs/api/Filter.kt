@@ -25,7 +25,7 @@ class Filter : Parcelable {
 				val id = parcel.readLong()
 				val name = parcel.readString()
 				val vendor = parcel.readString()
-				val usecase = parcel.readParcelable(UsecaseItem::class.java.classLoader)
+				val usecase = parcel.readParcelable<UsecaseItem>(UsecaseItem::class.java.classLoader)
 					?: throw BadParcelableException("No valid usecase in parcel")
 				val sfxAvailable = parcel.readByte() != 0.toByte()
 				val bandCount = parcel.readInt()
