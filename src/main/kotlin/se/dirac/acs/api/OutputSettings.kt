@@ -42,8 +42,8 @@ class OutputSettings : Parcelable {
 	@Suppress("DEPRECATION")
 	constructor(parcel: Parcel) {
 		try {
-			this.device = parcel.readParcelable(Device::class.java.classLoader)
-			?: throw BadParcelableException("No valid device in parcel")
+			this.device = parcel.readParcelable<Device>(Device::class.java.classLoader)
+				?: throw BadParcelableException("No valid device in parcel")
 			val flags = BooleanArray(4)
 			parcel.readBooleanArray(flags)
 			this.enabled = flags[0]
@@ -53,8 +53,8 @@ class OutputSettings : Parcelable {
 			val bands = parcel.readInt()
 			this.eqBands = FloatArray(bands)
 			parcel.readFloatArray(this.eqBands)
-			this.filter = parcel.readParcelable(Filter::class.java.classLoader)
-			?: throw BadParcelableException("No valid filter")
+			this.filter = parcel.readParcelable<Filter>(Filter::class.java.classLoader)
+				?: throw BadParcelableException("No valid filter")
 		} catch (e: BadParcelableException) {
 			throw e
 		} catch (e2: Exception) {
@@ -71,9 +71,9 @@ class OutputSettings : Parcelable {
 		filter.apply {
 			var uc = if (internal) instance.internalUsecases[ucId] else instance.externalUsecases[ucId]
 			usecase = uc ?: if (internal)
-				instance.internalUsecases[Usecase.INTERNAL_POWERSOUND.value] as UsecaseItem
+				instance.internalUsecases.values.first()
 			else
-				instance.externalUsecases[Usecase.EXTERNAL_HEADSET.value] as UsecaseItem
+				instance.externalUsecases.values.first()
 		}
 
 		// If issues arise, disallow external usecases in internal and viceversa
