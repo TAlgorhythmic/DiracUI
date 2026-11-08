@@ -33,6 +33,7 @@ data class UiElements (
     val loudness: SeekBar,
     val device: Selector<Device>,
 	val usecase: Selector<UsecaseItem>,
+	val gameMode: Switch,
     val view: ScrollView,
 )
 
@@ -205,6 +206,10 @@ fun composeUi(ui: MainActivity): UiElements {
 		currentSettings.sfxEnabled = newValue
 		updateSettings(currentSettings)
 	}
+	val gameMode = switcher(ui, "Enable GameMode") {newValue: Boolean ->
+		currentSettings.gamemodeEnabled = newValue
+		updateSettings(currentSettings)
+	}
 	val eqEnabled = switcher(ui, "Enable Equalizer") { newValue: Boolean ->
 		currentSettings.eqEnabled = newValue
 		updateSettings(currentSettings)
@@ -241,6 +246,7 @@ fun composeUi(ui: MainActivity): UiElements {
 	content.addView(usecase)
 	content.addView(filterEnabled)
 	content.addView(sfxEnabled)
+	content.addView(gameMode)
 	content.addView(eqEnabled)
 	content.addView(equalizer)
 	content.addView(stereoWidthTitle)
@@ -268,6 +274,7 @@ fun composeUi(ui: MainActivity): UiElements {
 		loudness,
 		device,
 		usecase,
+		gameMode,
 		view
 	)
 }

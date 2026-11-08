@@ -141,7 +141,7 @@ interface IAudioControlService {
 
 	/**
 	* This likely only sets INTERNAL_POWERSOUND to INTERNAL_POWERSOUND_GAME and same with external.
-	* Unused, you can set game mode by changing filter usecase and using setOutput
+	* It looks like listUsecases doesn't list _GAME variants, so this looks like the only way to use game mode.
 	*/
 	boolean setGameModeEnabled(boolean enabled, out Bundle status);
 	boolean isGameModeEnabled();

@@ -23,6 +23,8 @@ class OutputSettings : Parcelable {
 	var eqBands: FloatArray = FloatArray(10)
 	var device: Device = Device.INTERNAL_DEVICE
 	var filter: Filter = Filter.INTERNAL_FILTER
+	var gamemodeEnabled: Boolean = false
+	var gamemodeAvailable: Boolean = false
 
 	// These two are not included in the parcel, just stored as a state
 	// To update these you need bind.setParameter(PARAM_STEREO_WIDTH, value)
@@ -86,6 +88,7 @@ class OutputSettings : Parcelable {
 		stereoWidth = c.getFloat(c.getColumnIndexOrThrow("stereoWidth"))
 		tonalBalance = c.getFloat(c.getColumnIndexOrThrow("tonalBalance"))
 		loudness = c.getFloat(c.getColumnIndexOrThrow("loudness"))
+		gamemodeEnabled = c.getInt(c.getColumnIndexOrThrow("gamemodeEnabled")) != 0
 	}
 
 	override fun describeContents(): Int {

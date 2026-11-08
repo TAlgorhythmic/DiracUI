@@ -69,6 +69,8 @@ class MainActivity : Activity() {
 		elements.stereoWidth.progress = (25f * (currentSettings.stereoWidth + 1f)).toInt()
 		elements.tonalBalance.progress = (25f * (currentSettings.tonalBalance + 1f)).toInt()
 		elements.loudness.progress = (25f * (currentSettings.loudness + 1f)).toInt()
+		elements.gameMode.isCheched = currentSettings.gamemodeEnabled
+		elements.gameMode.isEnabled = currentSettings.gamemodeAvailable
 
 		val instance = App.getInstance()
 		val external = BluetoothReceiver.BLUETOOTH_ACTIVE != null || HeadsetReceiver.PLUGGED
