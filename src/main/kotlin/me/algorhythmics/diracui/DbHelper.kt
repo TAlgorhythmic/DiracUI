@@ -23,7 +23,7 @@ class DbHelper(ctx: Context) : SQLiteOpenHelper(ctx, NAME, null, VERSION) {
 			device INTEGER NOT NULL DEFAULT -1,
 			gamemodeEnabled INTEGER NOT NULL DEFAULT 0
 		)""")
-		db.execSQL("INSERT INTO presets(name, bands) VALUES('internal', '0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;')") // 10 bands
+		db.execSQL("INSERT INTO presets(name, bands) VALUES('internal', '0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0')") // 10 bands
 		db.execSQL("INSERT INTO presets(name, device) VALUES('headphones', 1)")
     }
 
@@ -31,7 +31,7 @@ class DbHelper(ctx: Context) : SQLiteOpenHelper(ctx, NAME, null, VERSION) {
 		for (i in (old + 1)..new) {
 			when (i) {
 				2 -> {
-					db.execSQL("UPDATE presets SET bands = '0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;' WHERE name = 'internal'")
+					db.execSQL("UPDATE presets SET bands = '0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0;0.0' WHERE name = 'internal'")
 					db.execSQL("ALTER TABLE presets ADD COLUMN gamemodeEnabled INTEGER NOT NULL DEFAULT 0")
 				}
 			}

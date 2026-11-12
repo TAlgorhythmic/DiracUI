@@ -231,9 +231,15 @@ private val serviceCallback = object: IAudioControlServiceCallback.Stub() {
 		currentSettings.tonalBalance = old.tonalBalance
 		currentSettings.loudness = old.loudness
 
-		// Update UI if active
-		val ui = MainActivity.getActiveUi()
-		ui?.runOnUiThread { ui.updateUi() }
+		App.getInstance().worker.execute {
+			val bound = BOUND as IAudioControlService
+
+			currentSettings.gamemodeAvailable = if (currentSettings.device.id == (-1).toLong()) bound.hasAlternativeTuningInternal() else bound.hasAlternativeTuningExternal()
+
+			// Update UI if active
+			val ui = MainActivity.getActiveUi()
+			ui?.runOnUiThread { ui.updateUi() }
+		}
 	}
 }
 
