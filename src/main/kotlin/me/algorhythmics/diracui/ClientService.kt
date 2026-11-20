@@ -83,9 +83,7 @@ fun applyUpdatedSettings() {
 			!bound.setParameter(preset.filter.usecase, Parameter.LOUDNESS_ID, preset.loudness, bundle)
 		) { Log.w(TAG, "Service rejected preset '$presetName'") }
 
-		preset.gamemodeAvailable = if (preset.device.id == (-1).toLong()) bound.hasAlternativeTuningInternal() else bound.hasAlternativeTuningExternal()
-		if (preset.gamemodeAvailable)
-			bound.setGameModeEnabled(preset.gamemodeEnabled, bundle)
+		bound.setGameModeEnabled(preset.gamemodeEnabled, bundle)
 
 		toastError(bundle)
 
@@ -98,15 +96,12 @@ fun updateSettings(newSettings: OutputSettings) {
 	val bundle = Bundle()
 	val bound = BOUND ?: return
 	App.getInstance().worker.execute {
-
 		if (bound.setOutput2(newSettings, bundle) &&
 			bound.setParameter(newSettings.filter.usecase, Parameter.STEREO_WIDTH_ID, newSettings.stereoWidth, bundle) &&
 			bound.setParameter(newSettings.filter.usecase, Parameter.TONAL_BALANCE_ID, newSettings.tonalBalance, bundle) &&
 			bound.setParameter(newSettings.filter.usecase, Parameter.LOUDNESS_ID, newSettings.loudness, bundle)
 		) {
-			newSettings.gamemodeAvailable = !(if (newSettings.device.id == (-1).toLong()) bound.hasAlternativeTuningInternal() else bound.hasAlternativeTuningExternal())
-			if (newSettings.gamemodeAvailable)
-				bound.setGameModeEnabled(newSettings.gamemodeEnabled, bundle)
+			bound.setGameModeEnabled(newSettings.gamemodeEnabled, bundle)
 			val presetName = BluetoothReceiver.BLUETOOTH_ACTIVE
 			?: if (HeadsetReceiver.PLUGGED) "headphones" else "internal"
 			savePreset(presetName)
@@ -209,7 +204,7 @@ private val CONNECTION: ServiceConnection = object: ServiceConnection {
 		BOUND = null
 
 		App.getInstance().unbindService(CONNECTION)
-		if (rebind) 
+		if (rebind)
 			bindService(App.getInstance())
     }
 }
